@@ -15,13 +15,48 @@ const directHandleWhatsApp = `  function handleWhatsApp(event) {
       target && target.dataset
         ? String(target.dataset.whatsappDestination || target.getAttribute("href") || verifiedWhatsAppUrl)
         : verifiedWhatsAppUrl;
+    const now = Date.now();
+    const dedupeKey = "oaklyn_" + config.project_slug + "_whatsapp_cta_conversion";
+    const dedupeWindowMs = 24 * 60 * 60 * 1000;
+    let storedConversion = null;
+
+    try {
+      storedConversion = JSON.parse(
+        window.sessionStorage.getItem(dedupeKey) || window.localStorage.getItem(dedupeKey) || "null"
+      );
+    } catch (error) {
+      storedConversion = null;
+    }
+
+    if (
+      storedConversion &&
+      storedConversion.timestamp &&
+      now - Number(storedConversion.timestamp) < dedupeWindowMs
+    ) {
+      if (!event && destinationUrl) {
+        window.open(destinationUrl, "_blank");
+      }
+      return;
+    }
+
     const leadId = createLeadId();
+    const googleClickId = clickIds.gclid || clickIds.gbraid || clickIds.wbraid || "";
+    const conversionState = JSON.stringify({ lead_id: leadId, timestamp: now });
+
+    try {
+      window.sessionStorage.setItem(dedupeKey, conversionState);
+      window.localStorage.setItem(dedupeKey, conversionState);
+    } catch (error) {}
+
     const trackingPayload = Object.assign(
       {
         lead_id: leadId,
         event_id: leadId,
         blacklist_status: "not_checked",
-        verification_status: "skipped"
+        verification_status: "skipped",
+        google_ads_eligible: Boolean(googleClickId),
+        google_click_id: googleClickId,
+        dedupe_window_hours: 24
       },
       buildWhatsAppTrackingPayload(target)
     );
@@ -56,7 +91,9 @@ const patchClient = (html) => {
   if (!pattern.test(html)) {
     throw new Error("Could not find handleWhatsApp block to patch.");
   }
-  return html.replace(pattern, `${directHandleWhatsApp}\n  function handleCall`);
+  return html
+    .replace(pattern, `${directHandleWhatsApp}\n  function handleCall`)
+    .replace(/event:\s*"conversion"/g, 'event: "oaklyn_internal_success"');
 };
 
 const patchHtml = (html) =>
