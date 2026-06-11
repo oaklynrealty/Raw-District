@@ -46,13 +46,20 @@ export const project = {
     addressRegion: "Dubai",
     addressCountry: "AE",
     developer: "IMTIAZ Developments",
-    regulator: "Dubai Land Department"
+    regulator: "Dubai Land Department",
+    startingPrice: "649000",
+    priceCurrency: "AED"
   },
   seo: {
-    title: "Raw District by IMTIAZ Dubai | Downtown Jebel Ali",
+    title: "Raw District by IMTIAZ Downtown Jebel Ali | AED 649K",
     description:
-      "Explore Raw District by IMTIAZ in Downtown Jebel Ali, Dubai: furnished units, metro access, prices, payment plan, and Oaklyn Realty guidance.",
-    image: asset("photos/template-exterior-master-aerial.png")
+      "Explore Raw District by IMTIAZ in Downtown Jebel Ali from AED 649K with metro access and 20/30/50 plan. Request details from Oaklyn Realty.",
+    image: asset("photos/template-exterior-master-aerial.png"),
+    alternates: [
+      { hreflang: "en", href: "https://raw-district.oaklynrealty.ae/" },
+      { hreflang: "ar-AE", href: "https://raw-district-ae.oaklynrealty.ae/" },
+      { hreflang: "x-default", href: "https://raw-district.oaklynrealty.ae/" }
+    ]
   },
   whatsappPrefill: "Hello Oaklyn Realty, I am interested in Raw District by IMTIAZ",
   whatsappDirectUrl:
@@ -337,19 +344,24 @@ export const arabicProject = {
   name: "Raw District by IMTIAZ",
   slug: "raw-district",
   languageCode: "ar",
-  sourcePage: "raw-district.oaklynrealty.ae",
-  landingPageUrl: "https://raw-district.oaklynrealty.ae/",
-  thankYouPageUrl: "https://raw-district.oaklynrealty.ae/thank-you/",
+  sourcePage: "raw-district-ae.oaklynrealty.ae",
+  landingPageUrl: "https://raw-district-ae.oaklynrealty.ae/",
+  thankYouPageUrl: "https://raw-district-ae.oaklynrealty.ae/thank-you/",
   routePath: "/__oaklyn-lang/ar",
   alternateThankYouPath: "/__oaklyn-lang/ar-thank-you",
   assetVersion: "20260610-new-ar-template",
   landingTemplate: "raw-ar-attached-template",
   launchBanner: null,
   seo: {
-    title: "Raw District Dubai | IMTIAZ Downtown Jebel Ali",
+    title: "Raw District دبي من 649 ألف درهم | IMTIAZ",
     description:
-      "تفاصيل Raw District by IMTIAZ في وسط جبل علي دبي: شقق مفروشة، وصول للمترو، أسعار، خطة دفع، ومساعدة Oaklyn Realty.",
-    image: asset("photos/template-exterior-master-aerial.png")
+      "راجع Raw District by IMTIAZ في وسط جبل علي من 649 ألف درهم مع وصول للمترو وخطة 20/30/50. اطلب التفاصيل من Oaklyn Realty.",
+    image: asset("photos/template-exterior-master-aerial.png"),
+    alternates: [
+      { hreflang: "ar-AE", href: "https://raw-district-ae.oaklynrealty.ae/" },
+      { hreflang: "en", href: "https://raw-district.oaklynrealty.ae/" },
+      { hreflang: "x-default", href: "https://raw-district.oaklynrealty.ae/" }
+    ]
   },
   locale: {
     lang: "ar",
@@ -370,7 +382,9 @@ export const arabicProject = {
     addressRegion: "Dubai",
     addressCountry: "AE",
     developer: "IMTIAZ Developments",
-    regulator: "Dubai Land Department"
+    regulator: "Dubai Land Department",
+    startingPrice: "649000",
+    priceCurrency: "AED"
   },
   whatsappPrefill: "مرحباً Oaklyn Realty، أود معرفة المزيد عن Raw District",
   hero: {
