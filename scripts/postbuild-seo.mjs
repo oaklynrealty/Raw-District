@@ -44,13 +44,13 @@ const ensureRobots = (html) => {
   if (/<meta\s+name=["']robots["']/i.test(html)) return html;
   return html.replace(
     /(<meta\s+name=["']viewport["'][^>]*>\s*)/i,
-    `$1\n  <meta name="robots" content="index, follow">`,
+    `$1  <meta name="robots" content="index, follow">\n  `,
   );
 };
 
 const ensureHreflang = (html) => {
   if (hasNoindex(html) || /rel=["']alternate["']\s+hreflang=/i.test(html)) return html;
-  return html.replace(/(<link\s+rel=["']canonical["'][^>]*>\s*)/i, `$1\n  ${hreflangHtml}`);
+  return html.replace(/(<link\s+rel=["']canonical["'][^>]*>\s*)/i, `$1  ${hreflangHtml}\n  `);
 };
 
 const ensureListingOfferSchema = (html) =>
