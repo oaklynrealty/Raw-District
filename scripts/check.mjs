@@ -50,13 +50,14 @@ for (const file of ["index.html", "index-en.html", "index-ar.html"]) {
 const clientJs = await readFile(path.join(distDir, "client.js"), "utf8");
 const stylesCss = await readFile(path.join(distDir, "styles.css"), "utf8");
 const genericConversionPushes = clientJs.match(/event:\s*"conversion"/g) || [];
-assert(genericConversionPushes.length === 2, "client.js: generic conversion must only fire for clean form and clean WhatsApp paths");
+assert(genericConversionPushes.length === 0, "client.js: generic conversion event should not be used for ad-platform conversions");
 assert(!clientJs.includes('window.dataLayer.push({ event: "conversion" })'), "client.js: bare conversion push should not exist");
 assert(clientJs.includes('event: "phone_call_click"'), "client.js: call clicks should be tracked separately from conversions");
 assert(!clientJs.includes("whatsappModalStatus"), "client.js: WhatsApp modal progress state should not exist");
 assert(!clientJs.includes("startWhatsAppProgressState"), "client.js: WhatsApp should use full-screen verification instead of modal progress");
 assert(!clientJs.includes("whatsapp_progress"), "client.js: WhatsApp modal progress config should not be used");
-assert(clientJs.includes("closeWhatsAppModal();\n\n    showVerification(async function ()"), "client.js: WhatsApp blacklist check should run inside full-screen verification");
+assert(clientJs.includes('event: "whatsapp_cta_conversion"'), "client.js: WhatsApp should push direct CTA conversion event");
+assert(!clientJs.includes("openWhatsAppModal(target);"), "client.js: WhatsApp clicks should not open a modal");
 
 const validateJsonLd = (html, file, minimumBlocks = 3) => {
   const blocks = [...html.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/g)];
@@ -98,11 +99,8 @@ const sharedTrackingTerms = [
 const whatsappTrackingTerms = [
   "whatsapp_cta_click",
   "whatsapp_cta_conversion",
-  "whatsapp_cta_unverified",
-  "whatsapp_cta_blocked",
-  "whatsapp_cta_blacklist_error",
-  "checkBlacklistStatusWithSimilarPhone",
-  "whatsapp_webhook_url",
+  "destination_url",
+  "cta_location",
 ];
 
 const requiredVisibleFields = [
@@ -207,10 +205,10 @@ for (const file of landingFiles) {
   }
 
   assert(html.includes('data-whatsapp-cta'), `${file}: missing WhatsApp CTA`);
-  assert(html.includes('data-whatsapp-modal'), `${file}: missing WhatsApp modal`);
-  assert(html.includes('data-country-picker="whatsapp"'), `${file}: missing WhatsApp country-code picker`);
-  assert(html.includes('id="whatsapp_modal_country_search"'), `${file}: missing WhatsApp country-code search`);
-  assert(html.includes('id="whatsappModalCountryCode" type="hidden"'), `${file}: missing WhatsApp hidden country-code input`);
+  assert(!html.includes('data-whatsapp-modal'), `${file}: WhatsApp modal should not be rendered`);
+  assert(!html.includes('data-country-picker="whatsapp"'), `${file}: WhatsApp country-code picker should not be rendered`);
+  assert(!html.includes('id="whatsapp_modal_country_search"'), `${file}: WhatsApp country-code search should not be rendered`);
+  assert(!html.includes('id="whatsappModalCountryCode" type="hidden"'), `${file}: WhatsApp hidden country-code input should not be rendered`);
   assert(html.includes('"language_switcher_enabled": false'), `${file}: language switcher should be disabled`);
   validateJsonLd(html, file);
   assertSeoMetadata(html, file);

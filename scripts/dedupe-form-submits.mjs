@@ -1,13 +1,13 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const distDir = path.join(rootDir, "dist");
-const targets = [path.join(rootDir, "client.js"), path.join(distDir, "client.js")];
+const clientTargets = [path.join(rootDir, "client.js"), path.join(distDir, "client.js")];
 
-const helperBlock = `  const FORM_DEDUPE_WINDOW_MS = 10 * 60 * 1000;
+const helperBlock = `  const FORM_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
   let formSubmissionInProgress = false;
 
   function hashLeadFingerprint(value) {
@@ -41,15 +41,23 @@ const helperBlock = `  const FORM_DEDUPE_WINDOW_MS = 10 * 60 * 1000;
     return Date.now() - Number(state.timestamp) < FORM_DEDUPE_WINDOW_MS ? state : null;
   }
 
-  function writeFormSubmissionState(storageKey, leadId) {
+  function writeFormSubmissionState(storageKey, leadId, status) {
     const state = JSON.stringify({
       project_slug: config.project_slug,
       lead_id: leadId,
+      status: status || "pending",
       timestamp: Date.now()
     });
     try {
       window.sessionStorage.setItem(storageKey, state);
       window.localStorage.setItem(storageKey, state);
+    } catch (error) {}
+  }
+
+  function clearFormSubmissionState(storageKey) {
+    try {
+      window.sessionStorage.removeItem(storageKey);
+      window.localStorage.removeItem(storageKey);
     } catch (error) {}
   }
 
@@ -77,6 +85,7 @@ const duplicateGuard = (phoneExpression, emailExpression) => `    const formSubm
     }
 
     formSubmissionInProgress = true;
+    writeFormSubmissionState(formSubmissionKey, leadId, "pending");
 `;
 
 function replaceOnce(source, searchValue, replacement, label) {
@@ -86,9 +95,187 @@ function replaceOnce(source, searchValue, replacement, label) {
   return source.replace(searchValue, replacement);
 }
 
+function patchValidation(source) {
+  let output = source.replace('if (!cleaned) return "+971";', 'if (!cleaned) return "";');
+
+  if (!output.includes("function isSequentialDigits(value)")) {
+    output = replaceOnce(
+      output,
+      `  function hasRepeatedDigits(value) {
+    return /^(\\d)\\1+$/.test(String(value || ""));
+  }
+`,
+      `  function hasRepeatedDigits(value) {
+    return /^(\\d)\\1+$/.test(String(value || ""));
+  }
+
+  function isSequentialDigits(value) {
+    const digits = String(value || "");
+    if (digits.length < 6) return false;
+    return "01234567890123456789".includes(digits) || "98765432109876543210".includes(digits);
+  }
+
+  function hasRepeatingDigitPattern(value) {
+    const digits = String(value || "");
+    if (digits.length < 6) return false;
+    return /^(\\d{2,3})\\1+$/.test(digits);
+  }
+`,
+      "phone validation helper block"
+    );
+  }
+
+  if (!output.includes("function isValidEmailAddress(value)")) {
+    output = replaceOnce(
+      output,
+      `  function normalizeEmailValue(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+`,
+      `  function normalizeEmailValue(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  const BLOCKED_EMAIL_DOMAINS = new Set([
+    "mailinator.com",
+    "tempmail.com",
+    "10minutemail.com",
+    "guerrillamail.com",
+    "yopmail.com",
+    "example.com",
+    "test.com"
+  ]);
+
+  const COMMON_EMAIL_TYPOS = new Set([
+    "gmal.com",
+    "gmail.con",
+    "gnail.com",
+    "gmial.com",
+    "hotnail.com",
+    "hotmil.com",
+    "outlook.con",
+    "yahoo.con",
+    "yaho.com"
+  ]);
+
+  function isValidEmailAddress(value) {
+    const email = normalizeEmailValue(value);
+    if (email.length < 6 || email.length > 254) return false;
+    if (!/^[a-z0-9.!#$%&'*+/=?^_\`{|}~-]+@[a-z0-9-]+(?:\\.[a-z0-9-]+)+$/i.test(email)) return false;
+
+    const parts = email.split("@");
+    if (parts.length !== 2) return false;
+
+    const localPart = parts[0];
+    const domain = parts[1];
+    if (!localPart || localPart.length > 64 || localPart.startsWith(".") || localPart.endsWith(".") || localPart.includes("..")) {
+      return false;
+    }
+
+    if (!domain || domain.includes("..") || BLOCKED_EMAIL_DOMAINS.has(domain) || COMMON_EMAIL_TYPOS.has(domain)) {
+      return false;
+    }
+
+    const domainLabels = domain.split(".");
+    if (domainLabels.some((label) => !label || label.startsWith("-") || label.endsWith("-"))) {
+      return false;
+    }
+
+    const topLevelDomain = domainLabels[domainLabels.length - 1] || "";
+    return /^[a-z]{2,24}$/i.test(topLevelDomain);
+  }
+`,
+      "email validation helper block"
+    );
+  }
+
+  output = output
+    .replace(
+      `    if (!nationalNumber || nationalNumber.length < 6 || nationalNumber.length > 12) {
+      return { valid: false };
+    }
+
+    if (hasRepeatedDigits(nationalNumber)) {
+      return { valid: false };
+    }
+`,
+      `    if (!nationalNumber || nationalNumber.length < 6 || nationalNumber.length > 14) {
+      return { valid: false };
+    }
+
+    const significantNationalNumber = nationalNumber.replace(/^0+/, "");
+    if (
+      !significantNationalNumber ||
+      hasRepeatedDigits(significantNationalNumber) ||
+      isSequentialDigits(significantNationalNumber) ||
+      hasRepeatingDigitPattern(significantNationalNumber)
+    ) {
+      return { valid: false };
+    }
+`
+    )
+    .replace(
+      `return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value.trim());`,
+      `return isValidEmailAddress(value);`
+    );
+
+  if (!output.includes("let firstInvalidKey =")) {
+    output = output.replace(
+      `    let valid = true;
+    let firstInvalidField = null;
+    let validatedPhone = null;
+`,
+      `    let valid = true;
+    let firstInvalidField = null;
+    let firstInvalidKey = "";
+    let validatedPhone = null;
+`
+    );
+  }
+
+  if (!output.includes("firstInvalidKey = key;")) {
+    output = output.replace(
+      `          firstInvalidField = field;
+        }
+      }
+    });
+
+    if (!valid) {
+      focusFieldError(firstInvalidField);
+      return;
+    }
+`,
+      `          firstInvalidField = field;
+          firstInvalidKey = key;
+        }
+      }
+    });
+
+    if (!valid) {
+      if (formError) {
+        const isArabic = config.current_language === "ar" || document.documentElement.lang === "ar";
+        if (firstInvalidKey === "phone") {
+          setFormErrorMessage(config.form_phone_error || (isArabic ? "يرجى اختيار مفتاح الدولة وإدخال رقم هاتف صحيح." : "Please select a country code and enter a real phone number."));
+        } else if (firstInvalidKey === "email") {
+          setFormErrorMessage(config.form_email_error || (isArabic ? "يرجى إدخال بريد إلكتروني صحيح." : "Please enter a real email address."));
+        } else {
+          setFormErrorMessage(config.form_select_error || (isArabic ? "يرجى إكمال جميع الحقول المطلوبة." : "Please complete all required fields."));
+        }
+        formError.classList.add("is-visible");
+      }
+      focusFieldError(firstInvalidField);
+      return;
+    }
+`
+    );
+  }
+
+  return output;
+}
+
 function patchClient(source) {
   if (source.includes("lead_duplicate_suppressed") && source.includes("FORM_DEDUPE_WINDOW_MS")) {
-    return source;
+    return patchValidation(source);
   }
 
   let output = source;
@@ -171,6 +358,7 @@ ${duplicateGuard("phoneFull", "emailNormalized")}    if (leadIdInput) leadIdInpu
 `,
         `        console.error("[form] Blacklist check failed", blacklistOutcome.error);
         releaseFormSubmissionLock();
+        clearFormSubmissionState(formSubmissionKey);
 `
       )
       .replace(
@@ -178,13 +366,14 @@ ${duplicateGuard("phoneFull", "emailNormalized")}    if (leadIdInput) leadIdInpu
 `,
         `      if (blacklistResult && blacklistResult.blocked) {
         releaseFormSubmissionLock();
+        clearFormSubmissionState(formSubmissionKey);
 `
       )
       .replace(
         `          webhookSucceeded = true;
 `,
         `          webhookSucceeded = true;
-          writeFormSubmissionState(formSubmissionKey, leadId);
+          writeFormSubmissionState(formSubmissionKey, leadId, "submitted");
 `
       )
       .replace(
@@ -192,6 +381,7 @@ ${duplicateGuard("phoneFull", "emailNormalized")}    if (leadIdInput) leadIdInpu
 `,
         `          console.error("Webhook submit error:", error);
           releaseFormSubmissionLock();
+          clearFormSubmissionState(formSubmissionKey);
 `
       );
   } else {
@@ -201,6 +391,7 @@ ${duplicateGuard("phoneFull", "emailNormalized")}    if (leadIdInput) leadIdInpu
 `,
         `      if (blacklistResult.blocked) {
         releaseFormSubmissionLock();
+        clearFormSubmissionState(formSubmissionKey);
 `
       )
       .replace(
@@ -208,6 +399,7 @@ ${duplicateGuard("phoneFull", "emailNormalized")}    if (leadIdInput) leadIdInpu
 `,
         `      console.error("[blacklist] Check failed", error);
       releaseFormSubmissionLock();
+      clearFormSubmissionState(formSubmissionKey);
 `
       )
       .replace(
@@ -215,7 +407,7 @@ ${duplicateGuard("phoneFull", "emailNormalized")}    if (leadIdInput) leadIdInpu
 
       form.style.display = "none";`,
         `      await response.text();
-      writeFormSubmissionState(formSubmissionKey, leadId);
+      writeFormSubmissionState(formSubmissionKey, leadId, "submitted");
 
       form.style.display = "none";`
       )
@@ -224,26 +416,70 @@ ${duplicateGuard("phoneFull", "emailNormalized")}    if (leadIdInput) leadIdInpu
 `,
         `      console.error("Webhook submit error:", error);
       releaseFormSubmissionLock();
+      clearFormSubmissionState(formSubmissionKey);
 `
       );
   }
 
   output = beforeForm + formBlock;
 
-  if (!output.includes("writeFormSubmissionState(formSubmissionKey, leadId)")) {
+  if (!output.includes('writeFormSubmissionState(formSubmissionKey, leadId, "submitted")')) {
     throw new Error("Could not patch webhook success dedupe write.");
   }
 
-  return output;
+  return patchValidation(output);
 }
 
-for (const target of targets) {
+function patchHtml(source) {
+  const isArabic = /<html[^>]*(?:lang="ar"|dir="rtl")/i.test(source);
+  const placeholder = isArabic ? "+ مفتاح الدولة" : "+ country code";
+
+  return source
+    .replace(/(<input id="landing_phone_country"[^>]*type="hidden"[^>]*value=")[^"]*(")/g, "$1$2")
+    .replace(/(<span class="country-picker-flag" data-country-picker-flag>)[\s\S]*?(<\/span>)/g, "$1$2")
+    .replace(/(<span class="country-picker-label" data-country-picker-label>)[\s\S]*?(<\/span>)/g, `$1${placeholder}$2`)
+    .replace(/(<span class="country-picker-code" data-country-picker-code>)[\s\S]*?(<\/span>)/g, "$1$2")
+    .replace(/class="country-picker-option is-selected"/g, 'class="country-picker-option"')
+    .replace(/aria-selected="true"/g, 'aria-selected="false"');
+}
+
+const patchFile = async (target, patcher) => {
   try {
     const current = await readFile(target, "utf8");
-    await writeFile(target, patchClient(current));
+    const updated = patcher(current);
+    if (updated !== current) {
+      await writeFile(target, updated);
+    }
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
   }
+};
+
+const collectHtmlFiles = async (dir) => {
+  const files = [];
+  try {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const target = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === ".git" || entry.name === "node_modules") continue;
+        files.push(...(await collectHtmlFiles(target)));
+      } else if (entry.isFile() && entry.name.endsWith(".html")) {
+        files.push(target);
+      }
+    }
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  return files;
+};
+
+for (const target of clientTargets) {
+  await patchFile(target, patchClient);
 }
 
-console.log("Applied form duplicate lead guard.");
+for (const target of await collectHtmlFiles(rootDir)) {
+  await patchFile(target, patchHtml);
+}
+
+console.log("Applied form duplicate lead guard and validation hardening.");
