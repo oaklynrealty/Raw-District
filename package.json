@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs && node scripts/postbuild-seo.mjs && node scripts/direct-whatsapp.mjs",
-    "check": "node scripts/build.mjs && node scripts/postbuild-seo.mjs && node scripts/check.mjs"
+    "build": "node scripts/build.mjs && node scripts/postbuild-seo.mjs && node scripts/direct-whatsapp.mjs && node scripts/dedupe-form-submits.mjs",
+    "check": "node scripts/build.mjs && node scripts/postbuild-seo.mjs && node scripts/direct-whatsapp.mjs && node scripts/dedupe-form-submits.mjs && node scripts/check.mjs"
   }
 }
