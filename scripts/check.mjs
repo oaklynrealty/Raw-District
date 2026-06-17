@@ -178,6 +178,8 @@ assert(stylesCss.includes("min-height: 74px;"), "Stylesheet: Raw District inquir
 assert(stylesCss.includes("@media (max-width: 1080px)"), "Stylesheet: Raw District lead form needs tablet stacking");
 assert(clientJs.includes("const leadPopupDelayMs = 15000"), "client.js: lead popup should open after 15 seconds");
 assert(clientJs.includes("copyLeadPopupIntoMainForm"), "client.js: lead popup should reuse the main form submit path");
+assert(!clientJs.includes("leadPopupStorageKey"), "client.js: dismissed lead popup should not be persisted across refresh");
+assert(!clientJs.includes("_lead_popup_closed"), "client.js: lead popup close state should reset on refresh");
 
 for (const file of [`${publicRoutePath}/index.html`]) {
   const html = await readFile(path.join(distDir, file), "utf8");

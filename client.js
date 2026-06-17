@@ -1854,7 +1854,6 @@
   const leadPopupError = document.getElementById("leadPopupError");
   const leadPopupCountryInput = document.getElementById("lead_popup_phone_country");
   const leadPopupDelayMs = 15000;
-  const leadPopupStorageKey = "oaklyn_" + config.project_slug + "_lead_popup_closed";
   const leadSuccessStorageKey = "oaklyn_" + config.project_slug + "_lead_success";
   let leadPopupOpened = false;
 
@@ -1901,12 +1900,6 @@
     });
   }
 
-  function rememberLeadPopupClosed() {
-    try {
-      window.sessionStorage.setItem(leadPopupStorageKey, "1");
-    } catch (error) {}
-  }
-
   function hasStoredLeadSuccess() {
     try {
       if (window.sessionStorage.getItem(leadSuccessStorageKey)) return true;
@@ -1919,9 +1912,6 @@
 
   function shouldSuppressLeadPopup() {
     if (!leadPopup || !leadPopupForm || leadPopupOpened || hasStoredLeadSuccess()) return true;
-    try {
-      if (window.sessionStorage.getItem(leadPopupStorageKey)) return true;
-    } catch (error) {}
     return false;
   }
 
@@ -1946,9 +1936,6 @@
     leadPopup.classList.remove("is-visible");
     leadPopup.setAttribute("aria-hidden", "true");
     document.body.classList.remove("modal-open", "lead-popup-open");
-    if (!options || options.remember !== false) {
-      rememberLeadPopupClosed();
-    }
   }
 
   function validateLeadPopupForm() {
