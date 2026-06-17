@@ -168,10 +168,12 @@ assert(standaloneEnglishHtml.includes("template-exterior-master-aerial.png"), "i
 assert(standaloneEnglishHtml.includes("raw-location-map"), "index-en.html: missing embedded Google map location block");
 assert(standaloneEnglishHtml.includes("https://maps.app.goo.gl/6sCPZCeR6Sp5XHSj6"), "index-en.html: missing direct Google Maps link");
 assert(standaloneEnglishHtml.includes("https://www.google.com/maps?q=24.9770521,55.0917547"), "index-en.html: missing Google Maps embed coordinates");
+assert(standaloneEnglishHtml.includes("styles.css?v=20260617-location-fix"), "index-en.html: missing cache-busted location stylesheet version");
 assert(standaloneEnglishHtml.includes("data-map-link"), "index-en.html: missing tracked map CTA");
 assert(stylesCss.includes("scroll-margin-top: 90px"), "Stylesheet: Raw District location section needs hash-scroll spacing");
-assert(stylesCss.includes("min-height: clamp(380px, 42vw, 560px)"), "Stylesheet: Raw District map frame needs stable desktop height");
+assert(stylesCss.includes("height: clamp(400px, 38vw, 540px)"), "Stylesheet: Raw District map frame needs stable desktop height");
 assert(stylesCss.includes(".template-raw-ar .raw-location-map iframe"), "Stylesheet: Raw District map iframe needs full-frame styling");
+assert(stylesCss.includes("position: relative;"), "Stylesheet: Raw District map iframe should fill normal map frame");
 assert(stylesCss.includes("min-height: 320px;"), "Stylesheet: Raw District map frame needs stable mobile height");
 assert(stylesCss.includes(".template-raw-ar .lead-strip-section .field.is-message"), "Stylesheet: Raw District inquiry field should span the lead form");
 assert(stylesCss.includes("min-height: 74px;"), "Stylesheet: Raw District inquiry field needs usable height");

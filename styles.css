@@ -4486,15 +4486,16 @@ body.template-raw-ar::after {
   line-height: 1.8;
 }
 
+.template-raw-ar .raw-template-page .section.raw-template-location,
 .template-raw-ar .raw-template-location {
   background: var(--raw-card);
-  padding: clamp(4.5rem, 7vw, 6.5rem) 0;
+  padding: clamp(4rem, 6vw, 5.8rem) 0;
   scroll-margin-top: 90px;
 }
 
 .template-raw-ar .raw-location-grid {
   display: grid;
-  grid-template-columns: minmax(300px, 0.88fr) minmax(460px, 1.12fr);
+  grid-template-columns: minmax(320px, 0.82fr) minmax(560px, 1.18fr);
   gap: clamp(2.2rem, 5vw, 4.8rem);
   align-items: center;
   width: min(1280px, calc(100% - 10vw));
@@ -4511,7 +4512,7 @@ body.template-raw-ar::after {
   position: relative;
   border: 0;
   background: transparent;
-  padding: 0 0 0 1.85rem;
+  padding: 0 0 0 2.2rem;
   color: var(--raw-ink);
   font-size: 1.08rem;
   line-height: 1.8;
@@ -4520,11 +4521,11 @@ body.template-raw-ar::after {
 .template-raw-ar .location-list li::before {
   content: "";
   position: absolute;
-  top: 0.78em;
+  top: 0.72em;
   left: 0;
   right: auto;
-  width: 0.46rem;
-  height: 0.46rem;
+  width: 0.48rem;
+  height: 0.48rem;
   border-radius: 999px;
   background: var(--raw-gold);
   box-shadow: 0 0 0 5px rgba(201, 168, 76, 0.12);
@@ -4532,7 +4533,9 @@ body.template-raw-ar::after {
 
 .template-raw-ar .raw-location-media {
   position: relative;
-  min-height: clamp(380px, 42vw, 560px);
+  width: 100%;
+  height: clamp(400px, 38vw, 540px);
+  min-height: 0;
   margin: 0;
   border-radius: 4px;
   overflow: hidden;
@@ -4562,8 +4565,7 @@ body.template-raw-ar::after {
 }
 
 .template-raw-ar .raw-location-map iframe {
-  position: absolute;
-  inset: 0;
+  position: relative;
   display: block;
   width: 100%;
   height: 100%;
@@ -5301,6 +5303,7 @@ body.template-raw-ar {
   }
 
   .template-raw-ar .raw-location-media {
+    height: auto;
     min-height: 320px;
     aspect-ratio: 4 / 3;
   }
