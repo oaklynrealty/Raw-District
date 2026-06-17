@@ -301,6 +301,69 @@
     }
   });
 
+  function setupPageMotion() {
+    const motionTargets = [
+      ".raw-hero-grid .eyebrow",
+      ".raw-hero-grid h1",
+      ".raw-hero-grid p",
+      ".raw-hero-grid .cta-row",
+      ".raw-hero-highlights .highlight-card",
+      ".raw-template-gallery .section-kicker",
+      ".raw-gallery-item",
+      ".raw-value-card",
+      ".raw-location-grid > *",
+      ".raw-consultant-card",
+      ".raw-template-contact .section-kicker",
+      ".lead-strip-section .field",
+      ".lead-strip-section .btn-outer",
+      ".faq-card",
+      ".raw-template-trust .shell > *",
+      "footer .footer-panel"
+    ];
+    const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const animatedElements = [];
+
+    motionTargets.forEach(function (selector) {
+      document.querySelectorAll(selector).forEach(function (element) {
+        if (element.hasAttribute("data-animate")) return;
+        element.setAttribute("data-animate", "fade-up");
+        element.style.setProperty("--motion-index", String(animatedElements.length % 6));
+        animatedElements.push(element);
+      });
+    });
+
+    if (!animatedElements.length) return;
+    document.body.classList.add("js-motion-ready");
+
+    if (reducedMotion || !("IntersectionObserver" in window)) {
+      animatedElements.forEach(function (element) {
+        element.classList.add("is-visible");
+      });
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        });
+      },
+      {
+        root: null,
+        rootMargin: "0px 0px -8% 0px",
+        threshold: 0.12
+      }
+    );
+
+    animatedElements.forEach(function (element) {
+      observer.observe(element);
+    });
+  }
+
+  setupPageMotion();
+
   const heroSlider = document.querySelector("[data-hero-slider]");
   if (heroSlider) {
     const heroSlides = Array.from(heroSlider.querySelectorAll(".hero-slide"));

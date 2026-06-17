@@ -4015,6 +4015,12 @@ body.template-raw-ar::after {
   font-weight: 800;
   letter-spacing: 0;
   text-transform: none;
+  transition:
+    transform 240ms ease,
+    background-color 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    color 240ms ease;
 }
 
 .template-raw-ar .btn-primary {
@@ -4046,6 +4052,37 @@ body.template-raw-ar::after {
 
 .template-raw-ar .raw-template-page {
   background: var(--raw-bg);
+}
+
+body.template-raw-ar.js-motion-ready [data-animate] {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 760ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--motion-index, 0) * 70ms);
+  will-change: opacity, transform;
+}
+
+body.template-raw-ar.js-motion-ready [data-animate].is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  filter: none;
+}
+
+body.template-raw-ar.js-motion-ready .raw-gallery-item[data-animate],
+body.template-raw-ar.js-motion-ready .raw-consultant-card[data-animate],
+body.template-raw-ar.js-motion-ready .raw-value-card[data-animate],
+body.template-raw-ar.js-motion-ready .faq-card[data-animate] {
+  transform: translate3d(0, 34px, 0) scale(0.98);
+}
+
+body.template-raw-ar.js-motion-ready .raw-gallery-item[data-animate].is-visible,
+body.template-raw-ar.js-motion-ready .raw-consultant-card[data-animate].is-visible,
+body.template-raw-ar.js-motion-ready .raw-value-card[data-animate].is-visible,
+body.template-raw-ar.js-motion-ready .faq-card[data-animate].is-visible {
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
 .template-raw-ar .raw-template-hero {
@@ -4456,6 +4493,10 @@ body.template-raw-ar::after {
   filter: saturate(1.06);
 }
 
+.template-raw-ar .raw-gallery-item:hover span {
+  transform: translateY(-2px);
+}
+
 .template-raw-ar .raw-gallery-item::after {
   content: "";
   position: absolute;
@@ -4479,6 +4520,7 @@ body.template-raw-ar::after {
   font-weight: 800;
   letter-spacing: 0;
   text-transform: uppercase;
+  transition: transform 240ms ease, background-color 240ms ease, color 240ms ease;
 }
 
 .template-raw-ar .raw-gallery-feature span {
@@ -4681,6 +4723,7 @@ body.template-raw-ar::after {
   border-radius: 50%;
   background: #100e0a;
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.32);
+  animation: rawAdvisorFloat 5.8s ease-in-out infinite;
 }
 
 .template-raw-ar .raw-consultant-photo img {
@@ -4698,12 +4741,19 @@ body.template-raw-ar::after {
   background: #25d366;
   color: #ffffff;
   box-shadow: 0 18px 48px rgba(37, 211, 102, 0.18);
+  transition:
+    transform 240ms ease,
+    background-color 240ms ease,
+    box-shadow 240ms ease,
+    color 240ms ease;
 }
 
 .template-raw-ar .raw-consultant-whatsapp:hover,
 .template-raw-ar .raw-consultant-whatsapp:focus-visible {
   background: #20bd5a;
   color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 20px 58px rgba(37, 211, 102, 0.24);
 }
 
 .template-raw-ar .faq-section {
@@ -4841,6 +4891,8 @@ body.template-raw-ar::after {
 }
 
 .template-raw-ar .whatsapp-float {
+  position: relative;
+  isolation: isolate;
   width: 52px;
   height: 52px;
   border: 1px solid rgba(255, 255, 255, 0.24);
@@ -4848,6 +4900,17 @@ body.template-raw-ar::after {
   background: #25d366;
   box-shadow: 0 16px 38px rgba(37, 211, 102, 0.28);
   color: #ffffff;
+  animation: rawWhatsappBreathe 3.2s ease-in-out infinite;
+}
+
+.template-raw-ar .whatsapp-float::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  z-index: -1;
+  border: 1px solid rgba(37, 211, 102, 0.38);
+  border-radius: inherit;
+  animation: rawWhatsappRing 3.2s ease-out infinite;
 }
 
 .template-raw-ar .whatsapp-float .bx {
@@ -4921,9 +4984,55 @@ body.template-raw-ar::after {
   }
 }
 
+@keyframes rawAdvisorFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes rawWhatsappBreathe {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, -2px, 0) scale(1.04);
+  }
+}
+
+@keyframes rawWhatsappRing {
+  0% {
+    opacity: 0.46;
+    transform: scale(0.82);
+  }
+
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.42);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .template-raw-ar .hero-bg {
-    animation: none;
+  .template-raw-ar .hero-bg,
+  .template-raw-ar .raw-consultant-photo,
+  .template-raw-ar .whatsapp-float,
+  .template-raw-ar .whatsapp-float::after {
+    animation: none !important;
+  }
+
+  body.template-raw-ar.js-motion-ready [data-animate],
+  body.template-raw-ar.js-motion-ready [data-animate].is-visible {
+    opacity: 1;
+    transform: none !important;
+    filter: none;
+    transition: none;
   }
 }
 
