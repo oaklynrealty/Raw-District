@@ -432,7 +432,7 @@ ${duplicateGuard("phoneFull", "emailNormalized")}    if (leadIdInput) leadIdInpu
 
 function patchHtml(source) {
   const isArabic = /<html[^>]*(?:lang="ar"|dir="rtl")/i.test(source);
-  const placeholder = isArabic ? "+ مفتاح الدولة" : "+ country code";
+  const placeholder = isArabic ? "+971" : "+971";
 
   return source
     .replace(/(<input id="landing_phone_country"[^>]*type="hidden"[^>]*value=")[^"]*(")/g, "$1$2")

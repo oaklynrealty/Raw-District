@@ -761,7 +761,7 @@
 
   function normalizeDialCode(value) {
     const cleaned = String(value || "").replace(/[^\d+]/g, "");
-    if (!cleaned) return "+971";
+    if (!cleaned) return "";
     return cleaned.charAt(0) === "+" ? cleaned : "+" + cleaned.replace(/\D/g, "");
   }
 
@@ -1096,6 +1096,7 @@
       const nextCode = option.dataset.countryCode || "";
 
       countryInput.value = nextCode;
+      countryPicker.classList.remove("is-placeholder");
       if (countryPickerFlag) countryPickerFlag.textContent = nextFlag;
       if (countryPickerLabel) countryPickerLabel.textContent = nextLabel;
       if (countryPickerCode) countryPickerCode.textContent = nextCode;
@@ -1328,6 +1329,13 @@
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
       }
     },
+    message: {
+      input: document.getElementById("landing_message"),
+      wrap: document.getElementById("messageField"),
+      test: function (value) {
+        return value.trim().length >= 3;
+      }
+    },
     project: {
       input: document.getElementById("landing_preferred_project"),
       wrap: document.getElementById("projectField"),
@@ -1490,6 +1498,7 @@
         ? fields.name.input.value.trim()
         : "";
     const emailNormalized = fields.email && fields.email.input ? normalizeEmailValue(fields.email.input.value) : "";
+    const messageText = fields.message && fields.message.input ? fields.message.input.value.trim() : "";
     const preferredProject = fields.project && fields.project.input ? fields.project.input.value.trim() : "";
     const propertyType = fields.propertyType && fields.propertyType.input ? fields.propertyType.input.value.trim() : "";
     const leadId = createLeadId();
@@ -1526,7 +1535,9 @@
         gbraid: clickIds.gbraid,
         wbraid: clickIds.wbraid,
         google_click_id: clickIds.gclid || clickIds.gbraid || clickIds.wbraid,
-        message: "",
+        message: messageText,
+        inquiry_message: messageText,
+        comments: messageText,
         gdpr_consent:
           "By submitting this form, you agree to be contacted by Oaklyn Realty regarding your property inquiry."
       },
@@ -1817,6 +1828,7 @@
     const formName = fullName;
     const formPhone = phoneFull;
     const formEmail = normalizeEmailValue(fields.email.input.value);
+    const formMessage = fields.message && fields.message.input ? fields.message.input.value.trim() : "";
     const formUnit = fields.project.input.value.trim();
     const formInquiry = fields.propertyType.input.value.trim();
     const blockedLead = isBlacklisted(formPhone);
@@ -1934,7 +1946,9 @@
           buyer_type: "",
           preferred_contact: "",
           budget_range: "",
-          message: "",
+          message: formMessage,
+          inquiry_message: formMessage,
+          comments: formMessage,
           gdpr_consent:
             "By submitting this form, you agree to be contacted by Oaklyn Realty regarding your property inquiry."
         },

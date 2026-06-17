@@ -32,6 +32,8 @@ const defaultUiText = {
   form_phone_placeholder: "050 123 4567",
   form_phone_error: "Please enter a valid international phone number.",
   form_email_error: "Please enter a valid email address.",
+  form_message_error: "Please add a short inquiry.",
+  form_message_placeholder: "Tell us what you would like to know.",
   form_select_error: "Please select an option.",
   form_submit: "Request Project Information",
   form_submit_error: "We could not submit your enquiry. Please try again or contact Oaklyn Realty directly.",
@@ -810,8 +812,8 @@ const renderPhoneCountryPicker = ({
   const inputNameAttribute = inputName ? ` name="${escapeHtml(inputName)}"` : "";
   const labelledByAttribute = labelledBy ? ` aria-labelledby="${escapeHtml(labelledBy)}"` : "";
 
-  return `<div class="country-picker" data-country-picker="${escapeHtml(pickerKey)}">
-      <input id="${escapeHtml(inputId)}"${inputNameAttribute} type="hidden" value="${escapeHtml(defaultCountry.dialCode)}" data-country-picker-input>
+  return `<div class="country-picker is-placeholder" data-country-picker="${escapeHtml(pickerKey)}">
+      <input id="${escapeHtml(inputId)}"${inputNameAttribute} type="hidden" value="" data-country-picker-input>
       <button
         class="country-picker-trigger"
         type="button"
@@ -821,8 +823,8 @@ const renderPhoneCountryPicker = ({
         data-country-picker-trigger
       >
         <span class="country-picker-current">
-          <span class="country-picker-flag" data-country-picker-flag>${escapeHtml(defaultCountry.flag)}</span>
-          <span class="country-picker-label" data-country-picker-label>${escapeHtml(defaultCountry.label)}</span>
+          <span class="country-picker-flag" data-country-picker-flag></span>
+          <span class="country-picker-label" data-country-picker-label>Country code</span>
           <span class="country-picker-code" data-country-picker-code>${escapeHtml(defaultCountry.dialCode)}</span>
         </span>
         <span class="country-picker-chevron" aria-hidden="true">▾</span>
@@ -844,10 +846,10 @@ const renderPhoneCountryPicker = ({
           ${project.form.phoneCountries
             .map(
               (item, index) => `<button
-              class="country-picker-option${index === 0 ? " is-selected" : ""}"
+              class="country-picker-option"
               type="button"
               role="option"
-              aria-selected="${index === 0 ? "true" : "false"}"
+              aria-selected="false"
               data-country-option
               data-country-flag="${escapeHtml(item.flag)}"
               data-country-label="${escapeHtml(item.label)}"
@@ -872,6 +874,7 @@ const getFormLabels = () => ({
   lastName: "Last Name",
   phone: "Phone",
   email: "Email",
+  message: "Inquiry",
   project: "Preferred Project",
   propertyType: "Property Type",
   ...(project.form.labels || {}),
@@ -1110,22 +1113,22 @@ ${renderGtmBody(project.tracking, escapeHtml)}
 </html>`;
 };
 
-const renderLeadFormSection = (formLabels, options = {}) => {
-  const sectionClass = ["lead-strip-section", options.className].filter(Boolean).join(" ");
-  const shellClass = options.useShell === false ? "lead-strip-inline-shell" : "shell";
+const renderLeadFormPanel = (formLabels, options = {}) => {
+  const panelClass = ["form-panel", "lead-strip-panel", options.panelClassName].filter(Boolean).join(" ");
+  const headingClass = ["lead-strip-heading", options.headingClassName].filter(Boolean).join(" ");
+  const formClass = options.formClassName || "";
+  const panelId = options.id ? ` id="${escapeHtml(options.id)}"` : "";
 
   return `
-    <section class="${escapeHtml(sectionClass)}" id="contact" aria-label="${escapeHtml(project.form.title)}">
-      <div class="${escapeHtml(shellClass)}">
-        <div class="form-panel lead-strip-panel">
-          <div class="lead-strip-heading">
+        <div class="${escapeHtml(panelClass)}"${panelId} aria-label="${escapeHtml(project.form.title)}">
+          <div class="${escapeHtml(headingClass)}">
             <div>
               <span class="eyebrow">${escapeHtml(t("request_information_eyebrow"))}</span>
               <h2 class="section-title">${escapeHtml(project.form.title)}</h2>
             </div>
             <p class="section-copy">${renderBrandText(project.form.text)}</p>
           </div>
-          <form id="landingLeadForm" novalidate>
+          <form id="landingLeadForm"${formClass ? ` class="${escapeHtml(formClass)}"` : ""} novalidate>
             <div class="field-grid">
               ${renderNameFields(formLabels)}
               <div class="field is-phone" id="phoneField">
@@ -1140,6 +1143,11 @@ const renderLeadFormSection = (formLabels, options = {}) => {
                 <label for="landing_email">${escapeHtml(formLabels.email)}</label>
                 <input id="landing_email" name="email" type="email" autocomplete="email" placeholder="email@example.com" required>
                 <div class="field-error">${escapeHtml(t("form_email_error"))}</div>
+              </div>
+              <div class="field is-message" id="messageField">
+                <label for="landing_message">${escapeHtml(formLabels.message)}</label>
+                <textarea id="landing_message" name="message" rows="3" maxlength="600" placeholder="${escapeHtml(t("form_message_placeholder"))}" required></textarea>
+                <div class="field-error">${escapeHtml(t("form_message_error"))}</div>
               </div>
               <div class="field payload-hidden" id="projectField" hidden>
                 <label for="landing_preferred_project">${escapeHtml(formLabels.project)}</label>
@@ -1178,7 +1186,17 @@ const renderLeadFormSection = (formLabels, options = {}) => {
             <h3>${escapeHtml(t("form_success_title"))}</h3>
             <p class="section-copy">${renderBrandText(project.form.successText || `${t("form_success_copy_prefix")} ${project.name}.`)}</p>
           </div>
-        </div>
+        </div>`;
+};
+
+const renderLeadFormSection = (formLabels, options = {}) => {
+  const sectionClass = ["lead-strip-section", options.className].filter(Boolean).join(" ");
+  const shellClass = options.useShell === false ? "lead-strip-inline-shell" : "shell";
+
+  return `
+    <section class="${escapeHtml(sectionClass)}" id="contact" aria-label="${escapeHtml(project.form.title)}">
+      <div class="${escapeHtml(shellClass)}">
+        ${renderLeadFormPanel(formLabels)}
       </div>
     </section>`;
 };
@@ -1275,23 +1293,16 @@ const renderRawTemplateLaunchBanner = () => {
 const renderRawTemplateNav = () => `
   <header class="topbar raw-template-nav">
     <div class="shell nav">
-      <a class="brand" href="${escapeHtml(project.homeHref || "/")}" aria-label="${escapeHtml(company.company)} ${escapeHtml(project.name)} ${escapeHtml(t("brand_aria_suffix"))}">
-        <img src="${escapeHtml(company.logo)}" alt="${escapeHtml(company.company)}">
-        <span>${escapeHtml(project.name)}</span>
+      <a class="brand raw-brand-wordmark" href="${escapeHtml(project.homeHref || "/")}" aria-label="${escapeHtml(company.company)} ${escapeHtml(project.name)} ${escapeHtml(t("brand_aria_suffix"))}">
+        <span>RAW DISTRICT</span>
       </a>
       <nav class="nav-links" aria-label="${escapeHtml(t("primary_nav_aria"))}">
-        <a href="#overview">${escapeHtml(t("nav_overview"))}</a>
+        <a href="#overview">Thesis</a>
+        <a href="#gallery">Architecture</a>
+        <a href="#location">Investment</a>
         <a href="#gallery">${escapeHtml(t("nav_gallery"))}</a>
-        <a href="#location">${escapeHtml(t("nav_location"))}</a>
-        <a href="#contact">${escapeHtml(t("nav_contact"))}</a>
-        <a href="${escapeHtml(company.mainWebsite)}">${escapeHtml(t("nav_website"))}</a>
       </nav>
       <div class="nav-actions">
-        <a class="raw-nav-whatsapp" href="${escapeHtml(getWhatsAppHref())}" target="_blank" rel="noopener" data-whatsapp-cta data-cta-location="nav_whatsapp" data-whatsapp-destination="${escapeHtml(getWhatsAppHref())}">
-          <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>
-          <span>${escapeHtml(t("hero_whatsapp_cta"))}</span>
-        </a>
-        ${renderCallIconLink({ className: "nav-phone", location: "nav_call" })}
         <a class="btn btn-primary" href="#contact">${escapeHtml(t("nav_request_details"))}</a>
       </div>
     </div>
@@ -1321,30 +1332,29 @@ ${renderRawTemplateNav()}
     <section class="hero raw-template-hero">
       ${renderHeroVisual()}
       <div class="hero-shade"></div>
-      <div class="shell hero-content">
-        <span class="eyebrow">${escapeHtml(project.name)}</span>
-        <h1>${escapeHtml(project.hero.title)}</h1>
-        <p>${escapeHtml(project.hero.subtitle)}</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="#contact">${escapeHtml(project.hero.primaryCta)}</a>
-          <a class="btn btn-ghost" href="#contact"><span>${escapeHtml(project.hero.secondaryCta)}</span><i class="ti ti-download" aria-hidden="true"></i></a>
+      <div class="shell raw-hero-grid">
+        <div class="hero-content">
+          <span class="eyebrow">${escapeHtml(project.name)}</span>
+          <h1>${escapeHtml(project.hero.title)}</h1>
+          <p>${escapeHtml(project.hero.subtitle)}</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#contact">${escapeHtml(project.hero.primaryCta)}</a>
+            <a class="btn btn-ghost" href="#contact"><span>${escapeHtml(project.hero.secondaryCta)}</span><i class="ti ti-download" aria-hidden="true"></i></a>
+          </div>
         </div>
+        ${renderLeadFormPanel(formLabels, {
+          id: "contact",
+          panelClassName: "hero-lead-panel",
+          headingClassName: "hero-lead-heading",
+          formClassName: "hero-lead-form",
+        })}
       </div>
-    </section>
-
-    <section class="section quick-highlights raw-template-highlights" id="overview">
-      <div class="shell">
-        <div class="section-kicker">
-          <span class="eyebrow">${escapeHtml(t("quick_highlights_eyebrow"))}</span>
-          <h2 class="section-title">${escapeHtml(t("quick_highlights_title"))}</h2>
-        </div>
+      <div class="shell raw-hero-highlights" id="overview">
         <div class="highlight-grid">
           ${renderHighlights()}
         </div>
       </div>
     </section>
-
-    ${renderLeadFormSection(formLabels)}
 
     ${renderRawTemplateGallery()}
     ${renderRawTemplateValueCards()}

@@ -558,6 +558,64 @@
     return config.project_slug + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
   }
 
+  const FORM_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
+  let formSubmissionInProgress = false;
+
+  function hashLeadFingerprint(value) {
+    let hash = 0;
+    const input = String(value || "");
+    for (let index = 0; index < input.length; index += 1) {
+      hash = (hash << 5) - hash + input.charCodeAt(index);
+      hash |= 0;
+    }
+    return Math.abs(hash).toString(36);
+  }
+
+  function buildFormSubmissionKey(phone, email) {
+    const fingerprint = [config.project_slug, normalizePhone(phone), normalizeEmailValue(email)].join("|");
+    return "oaklyn_" + config.project_slug + "_form_submission_" + hashLeadFingerprint(fingerprint);
+  }
+
+  function readFormSubmissionState(storageKey) {
+    try {
+      return JSON.parse(
+        window.sessionStorage.getItem(storageKey) || window.localStorage.getItem(storageKey) || "null"
+      );
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function getRecentFormSubmission(storageKey) {
+    const state = readFormSubmissionState(storageKey);
+    if (!state || !state.timestamp) return null;
+    return Date.now() - Number(state.timestamp) < FORM_DEDUPE_WINDOW_MS ? state : null;
+  }
+
+  function writeFormSubmissionState(storageKey, leadId, status) {
+    const state = JSON.stringify({
+      project_slug: config.project_slug,
+      lead_id: leadId,
+      status: status || "pending",
+      timestamp: Date.now()
+    });
+    try {
+      window.sessionStorage.setItem(storageKey, state);
+      window.localStorage.setItem(storageKey, state);
+    } catch (error) {}
+  }
+
+  function clearFormSubmissionState(storageKey) {
+    try {
+      window.sessionStorage.removeItem(storageKey);
+      window.localStorage.removeItem(storageKey);
+    } catch (error) {}
+  }
+
+  function releaseFormSubmissionLock() {
+    formSubmissionInProgress = false;
+  }
+
   function normalizePhone(value) {
     const cleaned = String(value || "").replace(/[^\d+]/g, "");
     if (!cleaned) return "";
@@ -715,29 +773,82 @@
   }
 
   function handleWhatsApp(event) {
-    if (event) event.preventDefault();
+    if (event && event.__oaklynWhatsAppTracked) return;
+    if (event) event.__oaklynWhatsAppTracked = true;
+
     const target = event && event.currentTarget ? event.currentTarget : null;
     const destinationUrl =
       target && target.dataset
         ? String(target.dataset.whatsappDestination || target.getAttribute("href") || verifiedWhatsAppUrl)
         : verifiedWhatsAppUrl;
+    const now = Date.now();
+    const dedupeKey = "oaklyn_" + config.project_slug + "_whatsapp_cta_conversion";
+    const dedupeWindowMs = 24 * 60 * 60 * 1000;
+    let storedConversion = null;
 
-    if (whatsappModal) {
-      openWhatsAppModal(target);
+    try {
+      storedConversion = JSON.parse(
+        window.sessionStorage.getItem(dedupeKey) || window.localStorage.getItem(dedupeKey) || "null"
+      );
+    } catch (error) {
+      storedConversion = null;
+    }
+
+    if (
+      storedConversion &&
+      storedConversion.timestamp &&
+      now - Number(storedConversion.timestamp) < dedupeWindowMs
+    ) {
+      if (!event && destinationUrl) {
+        window.open(destinationUrl, "_blank");
+      }
       return;
     }
 
-    showVerification(function () {
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({
-        event: "whatsapp_cta_unverified",
-        conversion_type: "whatsapp",
+    const leadId = createLeadId();
+    const googleClickId = clickIds.gclid || clickIds.gbraid || clickIds.wbraid || "";
+    const conversionState = JSON.stringify({ lead_id: leadId, timestamp: now });
+
+    try {
+      window.sessionStorage.setItem(dedupeKey, conversionState);
+      window.localStorage.setItem(dedupeKey, conversionState);
+    } catch (error) {}
+
+    const trackingPayload = Object.assign(
+      {
+        lead_id: leadId,
+        event_id: leadId,
         blacklist_status: "not_checked",
-        project_name: config.project_name,
-        project_slug: config.project_slug
-      });
+        verification_status: "skipped",
+        google_ads_eligible: Boolean(googleClickId),
+        google_click_id: googleClickId,
+        dedupe_window_hours: 24
+      },
+      buildWhatsAppTrackingPayload(target)
+    );
+
+    pushDataLayerEvent(
+      Object.assign(
+        {
+          event: "whatsapp_cta_click"
+        },
+        trackingPayload
+      )
+    );
+
+    pushDataLayerEvent(
+      Object.assign(
+        {
+          event: "whatsapp_cta_conversion",
+          conversion_type: "whatsapp"
+        },
+        trackingPayload
+      )
+    );
+
+    if (!event && destinationUrl) {
       window.open(destinationUrl, "_blank");
-    });
+    }
   }
 
   function handleCall(event) {
@@ -761,7 +872,7 @@
 
   function normalizeDialCode(value) {
     const cleaned = String(value || "").replace(/[^\d+]/g, "");
-    if (!cleaned) return "+971";
+    if (!cleaned) return "";
     return cleaned.charAt(0) === "+" ? cleaned : "+" + cleaned.replace(/\D/g, "");
   }
 
@@ -775,6 +886,272 @@
 
   function hasRepeatedDigits(value) {
     return /^(\d)\1+$/.test(String(value || ""));
+  }
+
+  function isSequentialDigits(value) {
+    const digits = String(value || "");
+    if (digits.length < 6) return false;
+
+    let ascendingRun = 1;
+    let descendingRun = 1;
+    for (let index = 1; index < digits.length; index += 1) {
+      const previous = Number(digits.charAt(index - 1));
+      const current = Number(digits.charAt(index));
+
+      ascendingRun = current === previous + 1 ? ascendingRun + 1 : 1;
+      descendingRun = current === previous - 1 ? descendingRun + 1 : 1;
+
+      if (ascendingRun >= 6 || descendingRun >= 6) return true;
+    }
+
+    return false;
+  }
+
+  function hasRepeatingDigitPattern(value) {
+    const digits = String(value || "");
+    if (digits.length < 6) return false;
+    return /^(\d{2,3})\1+$/.test(digits);
+  }
+
+  const PHONE_LENGTH_RULES_BY_DIAL_CODE = {
+    "+1": [10],
+    "+7": [10],
+    "+20": [10],
+    "+27": [9],
+    "+30": [10],
+    "+31": [9],
+    "+32": [8, 9],
+    "+33": [9],
+    "+34": [9],
+    "+36": [8, 9],
+    "+39": [9, 10, 11],
+    "+40": [9],
+    "+41": [9],
+    "+43": [10, 11, 12, 13],
+    "+44": [10],
+    "+45": [8],
+    "+46": [7, 8, 9],
+    "+47": [8],
+    "+48": [9],
+    "+49": [10, 11, 12],
+    "+51": [8, 9],
+    "+52": [10],
+    "+53": [8],
+    "+54": [10],
+    "+55": [10, 11],
+    "+56": [9],
+    "+57": [10],
+    "+58": [10],
+    "+60": [9, 10],
+    "+61": [9],
+    "+62": [9, 10, 11, 12],
+    "+63": [10],
+    "+64": [8, 9, 10],
+    "+65": [8],
+    "+66": [8, 9],
+    "+81": [10],
+    "+82": [9, 10],
+    "+84": [9],
+    "+86": [11],
+    "+90": [10],
+    "+91": [10],
+    "+92": [10],
+    "+93": [9],
+    "+94": [9],
+    "+95": [8, 9, 10],
+    "+98": [10],
+    "+211": [9],
+    "+212": [9],
+    "+213": [8, 9],
+    "+216": [8],
+    "+218": [8, 9],
+    "+220": [7],
+    "+221": [9],
+    "+222": [8],
+    "+223": [8],
+    "+224": [9],
+    "+225": [10],
+    "+226": [8],
+    "+227": [8],
+    "+229": [8, 10],
+    "+230": [7, 8],
+    "+231": [7, 8],
+    "+232": [8],
+    "+233": [9],
+    "+234": [10],
+    "+235": [8],
+    "+236": [8],
+    "+237": [9],
+    "+238": [7],
+    "+239": [7],
+    "+240": [9],
+    "+241": [8, 9],
+    "+242": [9],
+    "+243": [9],
+    "+244": [9],
+    "+245": [7],
+    "+248": [7],
+    "+249": [9],
+    "+250": [9],
+    "+251": [9],
+    "+252": [8, 9],
+    "+253": [8],
+    "+254": [9],
+    "+255": [9],
+    "+256": [9],
+    "+257": [8],
+    "+258": [8, 9],
+    "+260": [9],
+    "+261": [9],
+    "+262": [9],
+    "+263": [9],
+    "+264": [9],
+    "+265": [8, 9],
+    "+266": [8],
+    "+267": [7, 8],
+    "+268": [8],
+    "+269": [7],
+    "+290": [4, 5],
+    "+291": [7],
+    "+297": [7],
+    "+298": [6],
+    "+299": [6],
+    "+350": [8],
+    "+351": [9],
+    "+352": [8, 9],
+    "+353": [9],
+    "+354": [7],
+    "+355": [9],
+    "+356": [8],
+    "+357": [8],
+    "+358": [9, 10],
+    "+359": [8, 9],
+    "+370": [8],
+    "+371": [8],
+    "+372": [7, 8],
+    "+373": [8],
+    "+374": [8],
+    "+375": [9],
+    "+376": [6],
+    "+377": [8, 9],
+    "+378": [10],
+    "+380": [9],
+    "+381": [8, 9],
+    "+382": [8],
+    "+383": [8],
+    "+385": [8, 9],
+    "+386": [8],
+    "+387": [8],
+    "+389": [8],
+    "+420": [9],
+    "+421": [9],
+    "+423": [7],
+    "+500": [5],
+    "+501": [7],
+    "+502": [8],
+    "+503": [8],
+    "+504": [8],
+    "+505": [8],
+    "+506": [8],
+    "+507": [7, 8],
+    "+508": [6],
+    "+509": [8],
+    "+590": [9],
+    "+591": [8],
+    "+592": [7],
+    "+593": [8, 9],
+    "+594": [9],
+    "+595": [9],
+    "+596": [9],
+    "+597": [6, 7],
+    "+598": [8],
+    "+599": [7, 8],
+    "+670": [7, 8],
+    "+672": [6],
+    "+673": [7],
+    "+674": [7],
+    "+675": [8],
+    "+676": [5],
+    "+677": [7],
+    "+678": [7],
+    "+679": [7],
+    "+680": [7],
+    "+681": [6],
+    "+682": [5],
+    "+683": [4],
+    "+685": [5, 7],
+    "+686": [5],
+    "+687": [6],
+    "+689": [8],
+    "+690": [4],
+    "+691": [7],
+    "+692": [7],
+    "+850": [8, 9, 10],
+    "+852": [8],
+    "+853": [8],
+    "+855": [8, 9],
+    "+856": [8, 9, 10],
+    "+880": [10],
+    "+886": [9],
+    "+960": [7],
+    "+961": [7, 8],
+    "+962": [8, 9],
+    "+963": [9],
+    "+964": [10],
+    "+965": [8],
+    "+966": [9],
+    "+967": [9],
+    "+968": [8],
+    "+970": [9],
+    "+971": [9],
+    "+972": [9],
+    "+973": [8],
+    "+974": [8],
+    "+975": [7, 8],
+    "+976": [8],
+    "+977": [10],
+    "+992": [9],
+    "+993": [8],
+    "+994": [9],
+    "+995": [9],
+    "+996": [9],
+    "+998": [9],
+    "+228": [8],
+    "+688": [5],
+    "+1340": [7],
+    "+1242": [7],
+    "+1246": [7],
+    "+1264": [7],
+    "+1268": [7],
+    "+1284": [7],
+    "+1345": [7],
+    "+1441": [7],
+    "+1473": [7],
+    "+1649": [7],
+    "+1664": [7],
+    "+1670": [7],
+    "+1671": [7],
+    "+1684": [7],
+    "+1721": [7],
+    "+1758": [7],
+    "+1767": [7],
+    "+1784": [7],
+    "+1787": [7],
+    "+1809": [7],
+    "+1868": [7],
+    "+1869": [7],
+    "+1876": [7]
+  };
+
+  function passesCountryPhoneRules(countryCode, nationalNumber) {
+    const digits = String(nationalNumber || "").replace(/D/g, "");
+    const allowedLengths = PHONE_LENGTH_RULES_BY_DIAL_CODE[countryCode];
+
+    if (!allowedLengths) {
+      return digits.length >= 6 && digits.length <= 14;
+    }
+
+    return allowedLengths.includes(digits.length);
   }
 
   function buildValidatedPhoneNumber(localValue, countryCode, allowedDialCodes) {
@@ -800,11 +1177,21 @@
     }
 
     const nationalNumber = normalizedLocalInput.charAt(0) === "0" ? normalizedLocalInput.slice(1) : normalizedLocalInput;
-    if (!nationalNumber || nationalNumber.length < 6 || nationalNumber.length > 12) {
+    if (!nationalNumber || nationalNumber.length < 6 || nationalNumber.length > 14) {
       return { valid: false };
     }
 
-    if (hasRepeatedDigits(nationalNumber)) {
+    if (!passesCountryPhoneRules(normalizedCountryCode, nationalNumber)) {
+      return { valid: false };
+    }
+
+    const significantNationalNumber = nationalNumber.replace(/^0+/, "");
+    if (
+      !significantNationalNumber ||
+      hasRepeatedDigits(significantNationalNumber) ||
+      isSequentialDigits(significantNationalNumber) ||
+      hasRepeatingDigitPattern(significantNationalNumber)
+    ) {
       return { valid: false };
     }
 
@@ -923,6 +1310,55 @@
 
   function normalizeEmailValue(value) {
     return String(value || "").trim().toLowerCase();
+  }
+
+  const BLOCKED_EMAIL_DOMAINS = new Set([
+    "mailinator.com",
+    "tempmail.com",
+    "10minutemail.com",
+    "guerrillamail.com",
+    "yopmail.com",
+    "example.com",
+    "test.com"
+  ]);
+
+  const COMMON_EMAIL_TYPOS = new Set([
+    "gmal.com",
+    "gmail.con",
+    "gnail.com",
+    "gmial.com",
+    "hotnail.com",
+    "hotmil.com",
+    "outlook.con",
+    "yahoo.con",
+    "yaho.com"
+  ]);
+
+  function isValidEmailAddress(value) {
+    const email = normalizeEmailValue(value);
+    if (email.length < 6 || email.length > 254) return false;
+    if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(email)) return false;
+
+    const parts = email.split("@");
+    if (parts.length !== 2) return false;
+
+    const localPart = parts[0];
+    const domain = parts[1];
+    if (!localPart || localPart.length > 64 || localPart.startsWith(".") || localPart.endsWith(".") || localPart.includes("..")) {
+      return false;
+    }
+
+    if (!domain || domain.includes("..") || BLOCKED_EMAIL_DOMAINS.has(domain) || COMMON_EMAIL_TYPOS.has(domain)) {
+      return false;
+    }
+
+    const domainLabels = domain.split(".");
+    if (domainLabels.some((label) => !label || label.startsWith("-") || label.endsWith("-"))) {
+      return false;
+    }
+
+    const topLevelDomain = domainLabels[domainLabels.length - 1] || "";
+    return /^[a-z]{2,24}$/i.test(topLevelDomain);
   }
 
   function normalizeBlacklistUrl(value) {
@@ -1096,6 +1532,7 @@
       const nextCode = option.dataset.countryCode || "";
 
       countryInput.value = nextCode;
+      countryPicker.classList.remove("is-placeholder");
       if (countryPickerFlag) countryPickerFlag.textContent = nextFlag;
       if (countryPickerLabel) countryPickerLabel.textContent = nextLabel;
       if (countryPickerCode) countryPickerCode.textContent = nextCode;
@@ -1325,7 +1762,14 @@
       input: document.getElementById("landing_email"),
       wrap: document.getElementById("emailField"),
       test: function (value) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+        return isValidEmailAddress(value);
+      }
+    },
+    message: {
+      input: document.getElementById("landing_message"),
+      wrap: document.getElementById("messageField"),
+      test: function (value) {
+        return value.trim().length >= 3;
       }
     },
     project: {
@@ -1490,6 +1934,7 @@
         ? fields.name.input.value.trim()
         : "";
     const emailNormalized = fields.email && fields.email.input ? normalizeEmailValue(fields.email.input.value) : "";
+    const messageText = fields.message && fields.message.input ? fields.message.input.value.trim() : "";
     const preferredProject = fields.project && fields.project.input ? fields.project.input.value.trim() : "";
     const propertyType = fields.propertyType && fields.propertyType.input ? fields.propertyType.input.value.trim() : "";
     const leadId = createLeadId();
@@ -1526,7 +1971,9 @@
         gbraid: clickIds.gbraid,
         wbraid: clickIds.wbraid,
         google_click_id: clickIds.gclid || clickIds.gbraid || clickIds.wbraid,
-        message: "",
+        message: messageText,
+        inquiry_message: messageText,
+        comments: messageText,
         gdpr_consent:
           "By submitting this form, you agree to be contacted by Oaklyn Realty regarding your property inquiry."
       },
@@ -1689,7 +2136,7 @@
 
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push({
-          event: "conversion",
+          event: "oaklyn_internal_success",
           conversion_type: "whatsapp",
           project_name: config.project_name,
           project_slug: config.project_slug,
@@ -1771,6 +2218,7 @@
 
   form.addEventListener("submit", function (event) {
     event.preventDefault();
+    if (formSubmissionInProgress) return;
     setFormErrorMessage("We could not submit your enquiry. Please try again or contact Oaklyn Realty directly.");
     if (formError) formError.classList.remove("is-visible");
 
@@ -1778,6 +2226,7 @@
 
     let valid = true;
     let firstInvalidField = null;
+    let firstInvalidKey = "";
     let validatedPhone = null;
     Object.keys(fields).forEach(function (key) {
       const field = fields[key];
@@ -1797,11 +2246,23 @@
         valid = false;
         if (!firstInvalidField && field.wrap && field.wrap.offsetParent !== null) {
           firstInvalidField = field;
+          firstInvalidKey = key;
         }
       }
     });
 
     if (!valid) {
+      if (formError) {
+        const isArabic = config.current_language === "ar" || document.documentElement.lang === "ar";
+        if (firstInvalidKey === "phone") {
+          setFormErrorMessage(config.form_phone_error || (isArabic ? "يرجى اختيار مفتاح الدولة وإدخال رقم هاتف صحيح." : "Please select a country code and enter a real phone number."));
+        } else if (firstInvalidKey === "email") {
+          setFormErrorMessage(config.form_email_error || (isArabic ? "يرجى إدخال بريد إلكتروني صحيح." : "Please enter a real email address."));
+        } else {
+          setFormErrorMessage(config.form_select_error || (isArabic ? "يرجى إكمال جميع الحقول المطلوبة." : "Please complete all required fields."));
+        }
+        formError.classList.add("is-visible");
+      }
       focusFieldError(firstInvalidField);
       return;
     }
@@ -1817,8 +2278,29 @@
     const formName = fullName;
     const formPhone = phoneFull;
     const formEmail = normalizeEmailValue(fields.email.input.value);
+    const formMessage = fields.message && fields.message.input ? fields.message.input.value.trim() : "";
     const formUnit = fields.project.input.value.trim();
     const formInquiry = fields.propertyType.input.value.trim();
+    const formSubmissionKey = buildFormSubmissionKey(formPhone, formEmail);
+    const recentSubmission = getRecentFormSubmission(formSubmissionKey);
+
+    if (recentSubmission) {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: "lead_duplicate_suppressed",
+        project: config.project_name,
+        project_name: config.project_name,
+        project_slug: config.project_slug,
+        lead_id: recentSubmission.lead_id || "",
+        form_submission_key: formSubmissionKey,
+        dedupe_window_minutes: Math.round(FORM_DEDUPE_WINDOW_MS / 60000)
+      });
+      showBlockedSuccess(config.blacklist_block_message || "Thank you. Your inquiry has already been received.");
+      return;
+    }
+
+    formSubmissionInProgress = true;
+    writeFormSubmissionState(formSubmissionKey, leadId, "pending");
     const blockedLead = isBlacklisted(formPhone);
     const blacklistPromise = (blockedLead
       ? Promise.resolve({
@@ -1853,6 +2335,8 @@
 
       if (blacklistOutcome && blacklistOutcome.error) {
         console.error("[form] Blacklist check failed", blacklistOutcome.error);
+        releaseFormSubmissionLock();
+        clearFormSubmissionState(formSubmissionKey);
         setFormErrorMessage(config.blacklist_error_message || "Something went wrong. Please try again.");
         if (formError) formError.classList.add("is-visible");
         pushDataLayerEvent({
@@ -1873,6 +2357,8 @@
       blacklistResult = blacklistOutcome ? blacklistOutcome.result : null;
 
       if (blacklistResult && blacklistResult.blocked) {
+        releaseFormSubmissionLock();
+        clearFormSubmissionState(formSubmissionKey);
         pushDataLayerEvent({
           event: "lead_blocked",
           project: config.project_name,
@@ -1934,7 +2420,9 @@
           buyer_type: "",
           preferred_contact: "",
           budget_range: "",
-          message: "",
+          message: formMessage,
+          inquiry_message: formMessage,
+          comments: formMessage,
           gdpr_consent:
             "By submitting this form, you agree to be contacted by Oaklyn Realty regarding your property inquiry."
         },
@@ -1946,13 +2434,14 @@
       submitFormWebhook(payload)
         .then(function () {
           webhookSucceeded = true;
+          writeFormSubmissionState(formSubmissionKey, leadId, "submitted");
           setLeadMatchKeys({
             email: formEmail,
             phone: formPhone
           });
           window.dataLayer = window.dataLayer || [];
           window.dataLayer.push({
-            event: "conversion",
+            event: "oaklyn_internal_success",
             conversion_type: "form",
             project_name: config.project_name,
             project_slug: config.project_slug,
@@ -1971,6 +2460,8 @@
         })
         .catch(function (error) {
           console.error("Webhook submit error:", error);
+          releaseFormSubmissionLock();
+          clearFormSubmissionState(formSubmissionKey);
           setFormErrorMessage(config.form_submit_error || "We could not submit your enquiry. Please try again or contact Oaklyn Realty directly.");
           if (formError) formError.classList.add("is-visible");
           pushDataLayerEvent({

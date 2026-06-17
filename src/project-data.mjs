@@ -201,6 +201,7 @@ export const project = {
       name: "Full Name",
       phone: "Phone Number",
       email: "Email",
+      message: "Inquiry",
       project: "Preferred Unit",
       propertyType: "Inquiry Type"
     },

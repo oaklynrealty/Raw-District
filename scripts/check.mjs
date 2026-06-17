@@ -107,6 +107,7 @@ const requiredVisibleFields = [
   'name="phone"',
   'name="phone_country_code"',
   'name="email"',
+  'name="message"',
   'name="preferred_project"',
   'name="property_type"',
 ];
@@ -143,11 +144,13 @@ assert(standaloneEnglishHtml.includes(project.seo.title), "index-en.html: missin
 assert(standaloneEnglishHtml.includes(project.seo.description), "index-en.html: missing English SEO description");
 assert(standaloneEnglishHtml.includes('property="og:locale" content="en_AE"'), "index-en.html: missing English Open Graph locale");
 assert(standaloneEnglishHtml.includes("template-raw-ar"), "index-en.html: English page should use Raw District visual template");
-assert(standaloneEnglishHtml.includes("raw-template-highlights"), "index-en.html: missing Raw District highlights section");
-assert(standaloneEnglishHtml.indexOf("raw-template-highlights") < standaloneEnglishHtml.indexOf('id="contact"'), "index-en.html: project highlights should appear before the lead form");
+assert(standaloneEnglishHtml.includes("raw-hero-grid"), "index-en.html: missing Raw District hero conversion grid");
+assert(standaloneEnglishHtml.includes("hero-lead-panel"), "index-en.html: missing compact hero lead form");
+assert(standaloneEnglishHtml.includes("raw-hero-highlights"), "index-en.html: missing first-section highlights bar");
+assert(standaloneEnglishHtml.indexOf('id="contact"') < standaloneEnglishHtml.indexOf("raw-hero-highlights"), "index-en.html: lead form should appear inside the first hero section before the facts bar");
+assert(standaloneEnglishHtml.includes('data-country-picker-label>+971</span>'), "index-en.html: missing light +971 country-code placeholder");
 assert(!standaloneEnglishHtml.includes('data-cta-location="hero_whatsapp"'), "index-en.html: hero WhatsApp CTA should be removed");
 assert(standaloneEnglishHtml.includes('data-cta-location="floating_icon"'), "index-en.html: missing floating WhatsApp icon link");
-assert(standaloneEnglishHtml.includes('data-call-link data-cta-location="nav_call"'), "index-en.html: missing nav call icon link");
 assert(standaloneEnglishHtml.includes("template-exterior-master-aerial.png"), "index-en.html: missing updated template hero image");
 
 for (const file of [`${publicRoutePath}/index.html`]) {
@@ -235,13 +238,13 @@ assert(standaloneArabicHtml.includes("Raw District by IMTIAZ"), "Standalone Arab
 assert(!standaloneArabicHtml.includes("Imtiaz"), "Standalone Arabic file: IMTIAZ should be uppercase");
 assert(!standaloneArabicHtml.includes("راو ديستريكت"), "Standalone Arabic file: project name should stay English");
 assert(!standaloneArabicHtml.includes('data-cta-location="hero_whatsapp"'), "Standalone Arabic file: hero WhatsApp CTA should be removed");
-assert(!standaloneArabicHtml.includes("raw-hero-conversion-grid"), "Standalone Arabic file: form should not sit inside the hero");
-assert(standaloneArabicHtml.indexOf("raw-template-highlights") < standaloneArabicHtml.indexOf('id="contact"'), "Standalone Arabic file: project highlights should appear before the lead form");
+assert(standaloneArabicHtml.includes("raw-hero-grid"), "Standalone Arabic file: missing hero conversion grid");
+assert(standaloneArabicHtml.includes("hero-lead-panel"), "Standalone Arabic file: missing compact hero lead form");
+assert(standaloneArabicHtml.indexOf('id="contact"') < standaloneArabicHtml.indexOf("raw-hero-highlights"), "Standalone Arabic file: lead form should appear inside the first hero section before the facts bar");
 assert(standaloneArabicHtml.includes('data-cta-location="footer_contact"'), "Standalone Arabic file: missing footer WhatsApp contact link");
 assert(standaloneArabicHtml.includes('data-cta-location="floating_icon"'), "Standalone Arabic file: missing floating WhatsApp icon link");
 assert(standaloneArabicHtml.includes("ti-brand-whatsapp"), "Standalone Arabic file: missing WhatsApp icon");
 assert(stylesCss.includes(".template-raw-ar .whatsapp-float-wrap"), "Stylesheet: missing Arabic floating WhatsApp override");
-assert(standaloneArabicHtml.includes('data-call-link data-cta-location="nav_call"'), "Standalone Arabic file: missing nav call icon link");
 assert(standaloneArabicHtml.includes("footer-call-icon"), "Standalone Arabic file: missing footer call icon link");
 assert(!standaloneArabicHtml.includes(`<span>${project.brand.phoneDisplay}</span>`), "Standalone Arabic file: call number should not be visible in nav span");
 assert(!standaloneArabicHtml.includes(`>${project.brand.phoneDisplay}</a>`), "Standalone Arabic file: call number should not be visible as footer link text");
