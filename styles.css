@@ -4842,8 +4842,8 @@ body.template-raw-ar {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(330px, 410px);
-  gap: clamp(2rem, 5vw, 5.5rem);
+  grid-template-columns: minmax(0, 780px);
+  gap: 2rem;
   align-items: center;
   width: min(1280px, calc(100% - 10vw));
   padding: 4rem 0 3.4rem;

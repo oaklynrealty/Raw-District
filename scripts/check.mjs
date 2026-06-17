@@ -156,9 +156,10 @@ assert(standaloneEnglishHtml.includes(project.seo.description), "index-en.html: 
 assert(standaloneEnglishHtml.includes('property="og:locale" content="en_AE"'), "index-en.html: missing English Open Graph locale");
 assert(standaloneEnglishHtml.includes("template-raw-ar"), "index-en.html: English page should use Raw District visual template");
 assert(standaloneEnglishHtml.includes("raw-hero-grid"), "index-en.html: missing Raw District hero conversion grid");
-assert(standaloneEnglishHtml.includes("hero-lead-panel"), "index-en.html: missing compact hero lead form");
+assert(!standaloneEnglishHtml.includes("hero-lead-panel"), "index-en.html: header hero form should be removed");
 assert(standaloneEnglishHtml.includes("raw-hero-highlights"), "index-en.html: missing first-section highlights bar");
-assert(standaloneEnglishHtml.indexOf('id="contact"') < standaloneEnglishHtml.indexOf("raw-hero-highlights"), "index-en.html: lead form should appear inside the first hero section before the facts bar");
+assert(standaloneEnglishHtml.includes("raw-template-contact"), "index-en.html: missing lower contact form section");
+assert(standaloneEnglishHtml.indexOf('id="contact"') > standaloneEnglishHtml.indexOf("raw-template-location"), "index-en.html: contact form should sit below the location section, not in the header");
 assert(standaloneEnglishHtml.includes('data-country-picker-label>+971</span>'), "index-en.html: missing light +971 country-code placeholder");
 assert(!standaloneEnglishHtml.includes('data-cta-location="hero_whatsapp"'), "index-en.html: hero WhatsApp CTA should be removed");
 assert(standaloneEnglishHtml.includes('data-cta-location="floating_icon"'), "index-en.html: missing floating WhatsApp icon link");
@@ -260,8 +261,9 @@ assert(!standaloneArabicHtml.includes("Imtiaz"), "Standalone Arabic file: IMTIAZ
 assert(!standaloneArabicHtml.includes("راو ديستريكت"), "Standalone Arabic file: project name should stay English");
 assert(!standaloneArabicHtml.includes('data-cta-location="hero_whatsapp"'), "Standalone Arabic file: hero WhatsApp CTA should be removed");
 assert(standaloneArabicHtml.includes("raw-hero-grid"), "Standalone Arabic file: missing hero conversion grid");
-assert(standaloneArabicHtml.includes("hero-lead-panel"), "Standalone Arabic file: missing compact hero lead form");
-assert(standaloneArabicHtml.indexOf('id="contact"') < standaloneArabicHtml.indexOf("raw-hero-highlights"), "Standalone Arabic file: lead form should appear inside the first hero section before the facts bar");
+assert(!standaloneArabicHtml.includes("hero-lead-panel"), "Standalone Arabic file: header hero form should be removed");
+assert(standaloneArabicHtml.includes("raw-template-contact"), "Standalone Arabic file: missing lower contact form section");
+assert(standaloneArabicHtml.indexOf('id="contact"') > standaloneArabicHtml.indexOf("raw-template-location"), "Standalone Arabic file: contact form should sit below the location section, not in the header");
 assert(standaloneArabicHtml.includes('data-cta-location="footer_contact"'), "Standalone Arabic file: missing footer WhatsApp contact link");
 assert(standaloneArabicHtml.includes('data-cta-location="floating_icon"'), "Standalone Arabic file: missing floating WhatsApp icon link");
 assert(standaloneArabicHtml.includes("ti-brand-whatsapp"), "Standalone Arabic file: missing WhatsApp icon");

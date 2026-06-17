@@ -1399,12 +1399,6 @@ ${renderRawTemplateNav()}
             <a class="btn btn-ghost" href="#contact"><span>${escapeHtml(project.hero.secondaryCta)}</span><i class="ti ti-download" aria-hidden="true"></i></a>
           </div>
         </div>
-        ${renderLeadFormPanel(formLabels, {
-          id: "contact",
-          panelClassName: "hero-lead-panel",
-          headingClassName: "hero-lead-heading",
-          formClassName: "hero-lead-form",
-        })}
       </div>
       <div class="shell raw-hero-highlights" id="overview">
         <div class="highlight-grid">
@@ -1416,6 +1410,7 @@ ${renderRawTemplateNav()}
     ${renderRawTemplateGallery()}
     ${renderRawTemplateValueCards()}
     ${renderRawTemplateLocation()}
+    ${renderLeadFormSection(formLabels, { className: "raw-template-contact" })}
     ${renderFaq()}
     ${renderRawTemplateTrustBanner()}
   </main>
