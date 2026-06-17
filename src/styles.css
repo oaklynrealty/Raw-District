@@ -4457,27 +4457,28 @@ body.template-raw-ar.js-motion-ready .faq-card[data-animate].is-visible {
 .template-raw-ar .raw-gallery-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: clamp(1.1rem, 2.4vw, 2rem);
-  align-items: center;
+  align-items: stretch;
 }
 
 .template-raw-ar .raw-gallery-stack {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: clamp(1rem, 2vw, 1.65rem);
+  display: contents;
 }
 
 .template-raw-ar .raw-gallery-item {
   position: relative;
-  height: clamp(220px, 25vw, 320px);
-  min-height: 0;
+  height: 100%;
+  min-height: clamp(220px, 25vw, 320px);
   overflow: hidden;
   border-radius: 0;
   background: #0d0c09;
 }
 
 .template-raw-ar .raw-gallery-feature {
-  height: clamp(380px, 54vw, 660px);
+  grid-row: 1 / span 2;
+  height: 100%;
+  min-height: clamp(380px, 54vw, 660px);
 }
 
 .template-raw-ar .raw-gallery-item img {
@@ -5664,5 +5665,58 @@ body.template-raw-ar {
 
   .template-raw-ar .raw-hero-highlights .highlight-card:nth-child(odd) {
     border-left: 0;
+  }
+}
+
+@media (max-width: 1024px) {
+  .template-raw-ar .raw-template-gallery {
+    overflow: hidden;
+  }
+
+  .template-raw-ar .raw-template-gallery .shell {
+    width: 100%;
+  }
+
+  .template-raw-ar .raw-template-gallery .section-kicker {
+    width: min(100% - 32px, 560px);
+  }
+
+  .template-raw-ar .raw-gallery-grid {
+    display: flex !important;
+    grid-template-columns: none;
+    grid-template-rows: none;
+    gap: 1rem;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 1rem 1rem;
+    scroll-padding-inline: 1rem;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .template-raw-ar .raw-gallery-grid::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .template-raw-ar .raw-gallery-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .template-raw-ar .raw-gallery-grid::-webkit-scrollbar-thumb {
+    background: rgba(201, 168, 76, 0.78);
+    border-radius: 999px;
+  }
+
+  .template-raw-ar .raw-gallery-item,
+  .template-raw-ar .raw-gallery-feature {
+    flex: 0 0 min(84vw, 430px);
+    width: min(84vw, 430px);
+    height: clamp(340px, 82vw, 500px);
+    min-height: 0;
+    aspect-ratio: auto;
+    grid-row: auto;
+    scroll-snap-align: center;
   }
 }

@@ -1273,16 +1273,14 @@ const renderRawTemplateGallery = () => {
             <img src="${escapeHtml(withAssetVersion(feature.image))}" alt="${escapeHtml(feature.title)}" loading="eager" decoding="async">
             <span>${escapeHtml(feature.eyebrow)}</span>
           </article>
-          <div class="raw-gallery-stack">
-            ${sideItems
-              .map(
-                (item) => `<article class="raw-gallery-item">
+          ${sideItems
+            .map(
+              (item) => `<article class="raw-gallery-item">
                   <img src="${escapeHtml(withAssetVersion(item.image))}" alt="${escapeHtml(item.title)}" loading="eager" decoding="async">
                   <span>${escapeHtml(item.eyebrow)}</span>
                 </article>`,
-              )
-              .join("")}
-          </div>
+            )
+            .join("")}
         </div>
       </div>
     </section>`;
