@@ -168,6 +168,8 @@ export const project = {
     eyebrow: "Location",
     title: "Downtown Jebel Ali, Dubai",
     image: asset("photos/template-skyline-metro.png"),
+    mapUrl: "https://maps.app.goo.gl/6sCPZCeR6Sp5XHSj6",
+    mapEmbedUrl: "https://www.google.com/maps?q=24.9770521,55.0917547&z=16&output=embed",
     bullets: [
       "Direct access to Sheikh Zayed Road corridor.",
       "2 minutes to Jebel Ali Metro Station.",

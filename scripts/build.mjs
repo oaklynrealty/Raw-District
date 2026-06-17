@@ -1255,6 +1255,8 @@ const renderRawTemplateValueCards = () => {
 
 const renderRawTemplateLocation = () => {
   const image = project.location.image || project.gallery.items?.[4]?.image || project.hero.background;
+  const mapUrl = project.location.mapUrl || "";
+  const mapEmbedUrl = project.location.mapEmbedUrl || "";
   return `<section class="section raw-template-location" id="location">
       <div class="shell raw-location-grid">
         <div>
@@ -1263,9 +1265,13 @@ const renderRawTemplateLocation = () => {
           <ul class="location-list">
             ${renderLocationBullets()}
           </ul>
+          ${mapUrl ? `<a class="raw-map-link btn btn-primary" href="${escapeHtml(mapUrl)}" target="_blank" rel="noopener" data-map-link data-cta-location="location_map">
+            <i class="ti ti-map-pin" aria-hidden="true"></i>
+            <span>Open in Google Maps</span>
+          </a>` : ""}
         </div>
-        <figure class="raw-location-media">
-          <img src="${escapeHtml(withAssetVersion(image))}" alt="${escapeHtml(project.location.title)}" loading="eager" decoding="async">
+        <figure class="raw-location-media${mapEmbedUrl ? " raw-location-map" : ""}">
+          ${mapEmbedUrl ? `<iframe src="${escapeHtml(mapEmbedUrl)}" title="${escapeHtml(`${project.name} map location`)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>` : `<img src="${escapeHtml(withAssetVersion(image))}" alt="${escapeHtml(project.location.title)}" loading="eager" decoding="async">`}
         </figure>
       </div>
     </section>`;

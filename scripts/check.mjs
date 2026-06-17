@@ -152,6 +152,10 @@ assert(standaloneEnglishHtml.includes('data-country-picker-label>+971</span>'), 
 assert(!standaloneEnglishHtml.includes('data-cta-location="hero_whatsapp"'), "index-en.html: hero WhatsApp CTA should be removed");
 assert(standaloneEnglishHtml.includes('data-cta-location="floating_icon"'), "index-en.html: missing floating WhatsApp icon link");
 assert(standaloneEnglishHtml.includes("template-exterior-master-aerial.png"), "index-en.html: missing updated template hero image");
+assert(standaloneEnglishHtml.includes("raw-location-map"), "index-en.html: missing embedded Google map location block");
+assert(standaloneEnglishHtml.includes("https://maps.app.goo.gl/6sCPZCeR6Sp5XHSj6"), "index-en.html: missing direct Google Maps link");
+assert(standaloneEnglishHtml.includes("https://www.google.com/maps?q=24.9770521,55.0917547"), "index-en.html: missing Google Maps embed coordinates");
+assert(standaloneEnglishHtml.includes("data-map-link"), "index-en.html: missing tracked map CTA");
 
 for (const file of [`${publicRoutePath}/index.html`]) {
   const html = await readFile(path.join(distDir, file), "utf8");
