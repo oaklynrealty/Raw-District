@@ -158,6 +158,7 @@ assert(standaloneEnglishHtml.includes("template-raw-ar"), "index-en.html: Englis
 assert(standaloneEnglishHtml.includes("raw-hero-grid"), "index-en.html: missing Raw District hero conversion grid");
 assert(!standaloneEnglishHtml.includes("hero-lead-panel"), "index-en.html: header hero form should be removed");
 assert(standaloneEnglishHtml.includes("raw-hero-highlights"), "index-en.html: missing first-section highlights bar");
+assert(standaloneEnglishHtml.includes('</section>\n    <section class="raw-hero-highlights"'), "index-en.html: highlights bar should render outside the hero section");
 assert(standaloneEnglishHtml.includes("raw-template-contact"), "index-en.html: missing lower contact form section");
 assert(standaloneEnglishHtml.indexOf('id="contact"') > standaloneEnglishHtml.indexOf("raw-template-location"), "index-en.html: contact form should sit below the location section, not in the header");
 assert(standaloneEnglishHtml.includes('data-country-picker-label>+971</span>'), "index-en.html: missing light +971 country-code placeholder");
@@ -263,6 +264,7 @@ assert(!standaloneArabicHtml.includes('data-cta-location="hero_whatsapp"'), "Sta
 assert(standaloneArabicHtml.includes("raw-hero-grid"), "Standalone Arabic file: missing hero conversion grid");
 assert(!standaloneArabicHtml.includes("hero-lead-panel"), "Standalone Arabic file: header hero form should be removed");
 assert(standaloneArabicHtml.includes("raw-template-contact"), "Standalone Arabic file: missing lower contact form section");
+assert(standaloneArabicHtml.includes('</section>\n    <section class="raw-hero-highlights"'), "Standalone Arabic file: highlights bar should render outside the hero section");
 assert(standaloneArabicHtml.indexOf('id="contact"') > standaloneArabicHtml.indexOf("raw-template-location"), "Standalone Arabic file: contact form should sit below the location section, not in the header");
 assert(standaloneArabicHtml.includes('data-cta-location="footer_contact"'), "Standalone Arabic file: missing footer WhatsApp contact link");
 assert(standaloneArabicHtml.includes('data-cta-location="floating_icon"'), "Standalone Arabic file: missing floating WhatsApp icon link");

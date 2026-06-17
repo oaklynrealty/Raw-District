@@ -1400,10 +1400,10 @@ ${renderRawTemplateNav()}
           </div>
         </div>
       </div>
-      <div class="shell raw-hero-highlights" id="overview">
-        <div class="highlight-grid">
-          ${renderHighlights()}
-        </div>
+    </section>
+    <section class="raw-hero-highlights" id="overview" aria-label="${escapeHtml(t("quick_highlights_title"))}">
+      <div class="highlight-grid">
+        ${renderHighlights()}
       </div>
     </section>
 
