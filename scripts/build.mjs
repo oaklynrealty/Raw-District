@@ -1328,6 +1328,32 @@ const renderRawTemplateLocation = () => {
     </section>`;
 };
 
+const renderRawTemplateConsultantCta = () => {
+  const isArabic = getLocaleLang() === "ar";
+  const label = isArabic ? "إرشاد مستشار عقاري" : "Property consultant guidance";
+  const title = isArabic
+    ? "راجع Raw District مع مستشار عقاري قبل اتخاذ القرار."
+    : "Review Raw District with a property consultant before you decide.";
+  const body = isArabic
+    ? "يمكن لمستشار عقاري من Oaklyn Realty توضيح الأسعار الحالية، التوافر، خطة الدفع، تفاصيل الموقع، والخطوة الأنسب لاستفسارك."
+    : "A licensed Oaklyn Realty consultant can walk you through current pricing, availability, payment plan, location details, and the next step that fits your inquiry.";
+  const cta = isArabic ? "تواصل عبر واتساب" : "Chat on WhatsApp";
+  return `
+    <section class="raw-consultant-section" aria-label="${escapeHtml(label)}">
+      <div class="shell raw-consultant-card">
+        <div class="raw-consultant-copy">
+          <span class="raw-consultant-mark" aria-hidden="true">"</span>
+          <h2>${escapeHtml(title)}</h2>
+          <p>${escapeHtml(body)}</p>
+          ${renderWhatsAppLink({ className: "raw-consultant-whatsapp", label: cta, location: "consultant_section" })}
+        </div>
+        <figure class="raw-consultant-photo">
+          <img src="${escapeHtml(withAssetVersion("/assets/raw-district/photos/oaklyn-property-consultant.jpg"))}" alt="Oaklyn Realty property consultant" loading="lazy" decoding="async">
+        </figure>
+      </div>
+    </section>`;
+};
+
 const renderRawTemplateTrustBanner = () => `
     <section class="raw-template-trust">
       <div class="shell">
@@ -1410,6 +1436,7 @@ ${renderRawTemplateNav()}
     ${renderRawTemplateGallery()}
     ${renderRawTemplateValueCards()}
     ${renderRawTemplateLocation()}
+    ${renderRawTemplateConsultantCta()}
     ${renderLeadFormSection(formLabels, { className: "raw-template-contact" })}
     ${renderFaq()}
     ${renderRawTemplateTrustBanner()}

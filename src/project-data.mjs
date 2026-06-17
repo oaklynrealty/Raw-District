@@ -15,7 +15,7 @@ export const project = {
   routePath: "/__oaklyn-lang/en",
   alternateThankYouPath: "/__oaklyn-lang/en-thank-you",
   homeHref: "/",
-  assetVersion: "20260617-location-fix",
+  assetVersion: "20260617-consultant-cta",
   landingTemplate: "raw-ar-attached-template",
   launchBanner: null,
   webhookUrl: "https://hooks.zapier.com/hooks/catch/27424919/uvzwm7a/",
