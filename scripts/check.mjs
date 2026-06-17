@@ -159,6 +159,9 @@ assert(standaloneEnglishHtml.includes("raw-hero-grid"), "index-en.html: missing 
 assert(!standaloneEnglishHtml.includes("hero-lead-panel"), "index-en.html: header hero form should be removed");
 assert(standaloneEnglishHtml.includes("raw-hero-highlights"), "index-en.html: missing first-section highlights bar");
 assert(standaloneEnglishHtml.includes('</section>\n    <section class="raw-hero-highlights"'), "index-en.html: highlights bar should render outside the hero section");
+assert(standaloneEnglishHtml.includes("Vital Spaces"), "index-en.html: missing refreshed gallery eyebrow");
+assert(standaloneEnglishHtml.includes("Residences and <em>Atmospheres.</em>"), "index-en.html: missing refreshed editorial gallery title");
+assert(standaloneEnglishHtml.includes("Architectural Facade"), "index-en.html: missing gallery facade label");
 assert(standaloneEnglishHtml.includes("raw-template-contact"), "index-en.html: missing lower contact form section");
 assert(standaloneEnglishHtml.indexOf('id="contact"') > standaloneEnglishHtml.indexOf("raw-template-location"), "index-en.html: contact form should sit below the location section, not in the header");
 assert(standaloneEnglishHtml.includes('data-country-picker-label>+971</span>'), "index-en.html: missing light +971 country-code placeholder");
@@ -168,7 +171,7 @@ assert(standaloneEnglishHtml.includes("template-exterior-master-aerial.png"), "i
 assert(standaloneEnglishHtml.includes("raw-location-map"), "index-en.html: missing embedded Google map location block");
 assert(standaloneEnglishHtml.includes("https://maps.app.goo.gl/6sCPZCeR6Sp5XHSj6"), "index-en.html: missing direct Google Maps link");
 assert(standaloneEnglishHtml.includes("https://www.google.com/maps?q=24.9770521,55.0917547"), "index-en.html: missing Google Maps embed coordinates");
-assert(standaloneEnglishHtml.includes("styles.css?v=20260617-consultant-cta"), "index-en.html: missing cache-busted consultant CTA stylesheet version");
+assert(standaloneEnglishHtml.includes("styles.css?v=20260617-gallery-refresh"), "index-en.html: missing cache-busted gallery stylesheet version");
 assert(standaloneEnglishHtml.includes("data-map-link"), "index-en.html: missing tracked map CTA");
 assert(standaloneEnglishHtml.includes("raw-consultant-section"), "index-en.html: missing consultant CTA section");
 assert(standaloneEnglishHtml.includes("oaklyn-property-consultant.jpg"), "index-en.html: missing consultant photo");
@@ -179,6 +182,8 @@ assert(stylesCss.includes("height: clamp(400px, 38vw, 540px)"), "Stylesheet: Raw
 assert(stylesCss.includes(".template-raw-ar .raw-location-map iframe"), "Stylesheet: Raw District map iframe needs full-frame styling");
 assert(stylesCss.includes("position: relative;"), "Stylesheet: Raw District map iframe should fill normal map frame");
 assert(stylesCss.includes("min-height: 320px;"), "Stylesheet: Raw District map frame needs stable mobile height");
+assert(stylesCss.includes("grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr)"), "Stylesheet: Raw District gallery needs editorial two-column layout");
+assert(stylesCss.includes("height: clamp(380px, 54vw, 660px)"), "Stylesheet: Raw District gallery feature image needs taller editorial frame");
 assert(stylesCss.includes(".template-raw-ar .raw-consultant-card"), "Stylesheet: missing consultant CTA card styles");
 assert(stylesCss.includes(".template-raw-ar .lead-strip-section .field.is-message"), "Stylesheet: Raw District inquiry field should span the lead form");
 assert(stylesCss.includes("min-height: 74px;"), "Stylesheet: Raw District inquiry field needs usable height");

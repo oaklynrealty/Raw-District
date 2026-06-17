@@ -1255,15 +1255,18 @@ const renderLeadPopup = (formLabels) => `
 const renderRawTemplateGallery = () => {
   const items = project.gallery.items || [];
   const feature = items[0] || { eyebrow: project.gallery.eyebrow, title: project.gallery.title, image: project.hero.background };
-  const sideItems = items.slice(1, 5);
-  while (sideItems.length < 4) sideItems.push(feature);
+  const sideItems = items.slice(1, 3);
+  while (sideItems.length < 2) sideItems.push(feature);
+  const titleMarkup = project.gallery.title.includes("Atmospheres.")
+    ? `${escapeHtml(project.gallery.title.replace("Atmospheres.", ""))}<em>Atmospheres.</em>`
+    : escapeHtml(project.gallery.title);
 
   return `<section class="section raw-template-gallery" id="gallery">
       <div class="shell">
         <div class="section-kicker raw-template-centered">
           <span class="eyebrow">${escapeHtml(project.gallery.eyebrow)}</span>
-          <h2 class="section-title">${escapeHtml(project.gallery.title)}</h2>
-          <p class="section-copy">${escapeHtml(project.gallery.text)}</p>
+          <h2 class="section-title">${titleMarkup}</h2>
+          ${project.gallery.text ? `<p class="section-copy">${escapeHtml(project.gallery.text)}</p>` : ""}
         </div>
         <div class="raw-gallery-grid">
           <article class="raw-gallery-item raw-gallery-feature">

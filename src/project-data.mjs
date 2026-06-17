@@ -15,7 +15,7 @@ export const project = {
   routePath: "/__oaklyn-lang/en",
   alternateThankYouPath: "/__oaklyn-lang/en-thank-you",
   homeHref: "/",
-  assetVersion: "20260617-consultant-cta",
+  assetVersion: "20260617-gallery-refresh",
   landingTemplate: "raw-ar-attached-template",
   launchBanner: null,
   webhookUrl: "https://hooks.zapier.com/hooks/catch/27424919/uvzwm7a/",
@@ -104,29 +104,29 @@ export const project = {
     }
   ],
   gallery: {
-    eyebrow: "Visual Experience",
-    title: "Residences, district spaces, and lifestyle views",
-    text: "Selected project visuals for Raw District by IMTIAZ, including exterior, amenities, residences, lifestyle, and district context.",
+    eyebrow: "Vital Spaces",
+    title: "Residences and Atmospheres.",
+    text: "",
     items: [
       {
-        eyebrow: "Exterior",
-        title: "Master project view",
-        image: asset("photos/template-exterior-master-aerial.png")
+        eyebrow: "Architectural Facade",
+        title: "Evening architectural facade",
+        image: asset("photos/template-building-evening.png")
       },
       {
-        eyebrow: "Residences",
-        title: "Furnished living spaces",
+        eyebrow: "Smart Residences",
+        title: "Furnished smart residences",
         image: asset("photos/template-interior-living.png")
       },
       {
-        eyebrow: "Location",
-        title: "City and metro context",
+        eyebrow: "Lifestyle & Amenities",
+        title: "Lifestyle and district atmosphere",
         image: asset("photos/template-skyline-metro.png")
       },
       {
-        eyebrow: "Facade",
-        title: "Evening residential facade",
-        image: asset("photos/template-building-evening.png")
+        eyebrow: "Masterplan",
+        title: "Master project view",
+        image: asset("photos/template-exterior-master-aerial.png")
       },
       {
         eyebrow: "Amenities",
