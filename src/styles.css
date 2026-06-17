@@ -5485,8 +5485,6 @@ body.template-raw-ar {
   .template-raw-ar .lead-strip-section #landingLeadForm,
   .template-raw-ar .lead-strip-section .field-grid,
   .template-raw-ar .lead-strip-section .phone-input-row,
-  .template-raw-ar .raw-gallery-grid,
-  .template-raw-ar .raw-gallery-stack,
   .template-raw-ar .raw-location-grid {
     grid-template-columns: 1fr;
   }
@@ -5518,20 +5516,61 @@ body.template-raw-ar {
     grid-template-columns: 1fr;
   }
 
-  .template-raw-ar .raw-gallery-grid,
-  .template-raw-ar .raw-gallery-feature {
-    min-height: auto;
+  .template-raw-ar .raw-template-gallery {
+    overflow: hidden;
+  }
+
+  .template-raw-ar .raw-template-gallery .shell {
+    width: 100%;
+  }
+
+  .template-raw-ar .raw-template-gallery .section-kicker {
+    width: min(100% - 32px, 520px);
+  }
+
+  .template-raw-ar .raw-gallery-grid {
+    display: flex;
+    gap: 1rem;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 1rem 1rem;
+    scroll-padding-inline: 1rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .template-raw-ar .raw-gallery-grid::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .template-raw-ar .raw-gallery-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .template-raw-ar .raw-gallery-grid::-webkit-scrollbar-thumb {
+    background: rgba(201, 168, 76, 0.78);
+    border-radius: 999px;
+  }
+
+  .template-raw-ar .raw-gallery-stack {
+    display: contents;
   }
 
   .template-raw-ar .raw-gallery-item {
-    height: auto;
-    min-height: 280px;
-    aspect-ratio: 4 / 3;
+    flex: 0 0 min(82vw, 390px);
+    width: min(82vw, 390px);
+    height: clamp(330px, 88vw, 460px);
+    min-height: 0;
+    aspect-ratio: auto;
+    scroll-snap-align: center;
   }
 
   .template-raw-ar .raw-gallery-feature {
-    height: auto;
-    aspect-ratio: 4 / 5;
+    flex-basis: min(86vw, 410px);
+    width: min(86vw, 410px);
+    height: clamp(360px, 96vw, 500px);
+    aspect-ratio: auto;
   }
 
   .template-raw-ar .raw-location-media {
