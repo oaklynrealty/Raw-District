@@ -169,6 +169,10 @@ assert(standaloneEnglishHtml.includes("raw-location-map"), "index-en.html: missi
 assert(standaloneEnglishHtml.includes("https://maps.app.goo.gl/6sCPZCeR6Sp5XHSj6"), "index-en.html: missing direct Google Maps link");
 assert(standaloneEnglishHtml.includes("https://www.google.com/maps?q=24.9770521,55.0917547"), "index-en.html: missing Google Maps embed coordinates");
 assert(standaloneEnglishHtml.includes("data-map-link"), "index-en.html: missing tracked map CTA");
+assert(stylesCss.includes("scroll-margin-top: 90px"), "Stylesheet: Raw District location section needs hash-scroll spacing");
+assert(stylesCss.includes("min-height: clamp(380px, 42vw, 560px)"), "Stylesheet: Raw District map frame needs stable desktop height");
+assert(stylesCss.includes(".template-raw-ar .raw-location-map iframe"), "Stylesheet: Raw District map iframe needs full-frame styling");
+assert(stylesCss.includes("min-height: 320px;"), "Stylesheet: Raw District map frame needs stable mobile height");
 assert(clientJs.includes("const leadPopupDelayMs = 15000"), "client.js: lead popup should open after 15 seconds");
 assert(clientJs.includes("copyLeadPopupIntoMainForm"), "client.js: lead popup should reuse the main form submit path");
 
