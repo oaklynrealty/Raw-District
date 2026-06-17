@@ -173,6 +173,9 @@ assert(stylesCss.includes("scroll-margin-top: 90px"), "Stylesheet: Raw District 
 assert(stylesCss.includes("min-height: clamp(380px, 42vw, 560px)"), "Stylesheet: Raw District map frame needs stable desktop height");
 assert(stylesCss.includes(".template-raw-ar .raw-location-map iframe"), "Stylesheet: Raw District map iframe needs full-frame styling");
 assert(stylesCss.includes("min-height: 320px;"), "Stylesheet: Raw District map frame needs stable mobile height");
+assert(stylesCss.includes(".template-raw-ar .lead-strip-section .field.is-message"), "Stylesheet: Raw District inquiry field should span the lead form");
+assert(stylesCss.includes("min-height: 74px;"), "Stylesheet: Raw District inquiry field needs usable height");
+assert(stylesCss.includes("@media (max-width: 1080px)"), "Stylesheet: Raw District lead form needs tablet stacking");
 assert(clientJs.includes("const leadPopupDelayMs = 15000"), "client.js: lead popup should open after 15 seconds");
 assert(clientJs.includes("copyLeadPopupIntoMainForm"), "client.js: lead popup should reuse the main form submit path");
 
