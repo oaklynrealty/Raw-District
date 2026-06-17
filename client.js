@@ -1430,6 +1430,19 @@
   const wbraidInput = document.getElementById("landing_wbraid");
   const leadIdInput = document.getElementById("landing_lead_id");
   const phoneCountryInput = document.getElementById("landing_phone_country");
+
+  function hydrateEmptyCountryPickerLists() {
+    const sourceList = document.querySelector('[data-country-picker="lead"] [data-country-picker-list]');
+    if (!sourceList || !sourceList.innerHTML.trim()) return;
+
+    Array.from(document.querySelectorAll("[data-country-picker-list]")).forEach(function (list) {
+      if (list.children.length) return;
+      list.innerHTML = sourceList.innerHTML;
+    });
+  }
+
+  hydrateEmptyCountryPickerLists();
+
   const countryPickers = Array.from(document.querySelectorAll("[data-country-picker]"));
   const countryOptions = Array.from(document.querySelectorAll("[data-country-option]"));
   const countryPickerControllers = new Map();
@@ -1545,6 +1558,11 @@
 
       if (countryPickerSearch) {
         countryPickerSearch.value = "";
+      }
+
+      const closestField = countryPicker.closest(".field");
+      if (closestField) {
+        closestField.classList.remove("has-error");
       }
 
       if (countryInput === phoneCountryInput) {
@@ -1828,6 +1846,225 @@
       if (formError) formError.classList.remove("is-visible");
     });
   });
+
+  const leadPopup = document.querySelector("[data-lead-popup]");
+  const leadPopupForm = document.getElementById("leadPopupForm");
+  const leadPopupCloseButtons = Array.from(document.querySelectorAll("[data-lead-popup-close]"));
+  const leadPopupSubmit = document.getElementById("leadPopupSubmit");
+  const leadPopupError = document.getElementById("leadPopupError");
+  const leadPopupCountryInput = document.getElementById("lead_popup_phone_country");
+  const leadPopupDelayMs = 15000;
+  const leadPopupStorageKey = "oaklyn_" + config.project_slug + "_lead_popup_closed";
+  const leadSuccessStorageKey = "oaklyn_" + config.project_slug + "_lead_success";
+  let leadPopupOpened = false;
+
+  const leadPopupFields = {
+    name: {
+      input: document.getElementById("lead_popup_full_name"),
+      wrap: document.getElementById("leadPopupNameField"),
+      test: function (value) {
+        return value.trim().length >= 2;
+      }
+    },
+    phone: {
+      input: document.getElementById("lead_popup_phone"),
+      wrap: document.getElementById("leadPopupPhoneField"),
+      test: function () {
+        return true;
+      }
+    },
+    email: {
+      input: document.getElementById("lead_popup_email"),
+      wrap: document.getElementById("leadPopupEmailField"),
+      test: function (value) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+      }
+    },
+    message: {
+      input: document.getElementById("lead_popup_message"),
+      wrap: document.getElementById("leadPopupMessageField"),
+      test: function (value) {
+        return value.trim().length >= 3;
+      }
+    }
+  };
+
+  function setLeadPopupErrorMessage(message) {
+    if (!leadPopupError) return;
+    leadPopupError.textContent = message;
+  }
+
+  function clearLeadPopupError() {
+    if (leadPopupError) leadPopupError.classList.remove("is-visible");
+    Object.keys(leadPopupFields).forEach(function (key) {
+      setError(leadPopupFields[key], false);
+    });
+  }
+
+  function rememberLeadPopupClosed() {
+    try {
+      window.sessionStorage.setItem(leadPopupStorageKey, "1");
+    } catch (error) {}
+  }
+
+  function hasStoredLeadSuccess() {
+    try {
+      if (window.sessionStorage.getItem(leadSuccessStorageKey)) return true;
+    } catch (error) {}
+    try {
+      if (window.localStorage.getItem(leadSuccessStorageKey)) return true;
+    } catch (error) {}
+    return false;
+  }
+
+  function shouldSuppressLeadPopup() {
+    if (!leadPopup || !leadPopupForm || leadPopupOpened || hasStoredLeadSuccess()) return true;
+    try {
+      if (window.sessionStorage.getItem(leadPopupStorageKey)) return true;
+    } catch (error) {}
+    return false;
+  }
+
+  function openLeadPopup() {
+    if (shouldSuppressLeadPopup()) return;
+    leadPopupOpened = true;
+    clearLeadPopupError();
+    leadPopup.hidden = false;
+    leadPopup.classList.add("is-visible");
+    leadPopup.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open", "lead-popup-open");
+    window.setTimeout(function () {
+      if (leadPopupFields.name.input && typeof leadPopupFields.name.input.focus === "function") {
+        leadPopupFields.name.input.focus();
+      }
+    }, 80);
+  }
+
+  function closeLeadPopup(options) {
+    if (!leadPopup) return;
+    leadPopup.hidden = true;
+    leadPopup.classList.remove("is-visible");
+    leadPopup.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open", "lead-popup-open");
+    if (!options || options.remember !== false) {
+      rememberLeadPopupClosed();
+    }
+  }
+
+  function validateLeadPopupForm() {
+    let valid = true;
+    let firstInvalidField = null;
+    let firstInvalidKey = "";
+    let validatedPhone = null;
+
+    Object.keys(leadPopupFields).forEach(function (key) {
+      const field = leadPopupFields[key];
+      const inputValue = field.input ? field.input.value || "" : "";
+      const isValid =
+        key === "phone"
+          ? Boolean(
+              (validatedPhone = buildValidatedPhoneNumber(
+                inputValue,
+                leadPopupCountryInput ? leadPopupCountryInput.value : "",
+                allowedPhoneCountryCodes
+              )).valid
+            )
+          : field.input && field.test(inputValue);
+
+      setError(field, !isValid);
+      if (!isValid) {
+        valid = false;
+        if (!firstInvalidField) firstInvalidField = field;
+      }
+    });
+
+    if (!valid) {
+      setLeadPopupErrorMessage(config.form_submit_error || "Please check the required fields and try again.");
+      if (leadPopupError) leadPopupError.classList.add("is-visible");
+      focusFieldError(firstInvalidField);
+      return null;
+    }
+
+    if (leadPopupError) leadPopupError.classList.remove("is-visible");
+    return validatedPhone;
+  }
+
+  function copyLeadPopupIntoMainForm(validatedPhone) {
+    const popupName = leadPopupFields.name.input ? leadPopupFields.name.input.value.trim() : "";
+    const popupEmail = leadPopupFields.email.input ? normalizeEmailValue(leadPopupFields.email.input.value) : "";
+    const popupMessage = leadPopupFields.message.input ? leadPopupFields.message.input.value.trim() : "";
+
+    if (splitName) {
+      const nameParts = popupName.split(/\s+/).filter(Boolean);
+      if (fields.firstName && fields.firstName.input) fields.firstName.input.value = nameParts.shift() || popupName;
+      if (fields.lastName && fields.lastName.input) fields.lastName.input.value = nameParts.join(" ") || popupName;
+    } else if (fields.name && fields.name.input) {
+      fields.name.input.value = popupName;
+    }
+
+    if (fields.phone && fields.phone.input) fields.phone.input.value = validatedPhone.phoneLocal;
+    syncCountryPickerByInput(phoneCountryInput, validatedPhone.countryCode);
+    if (fields.email && fields.email.input) fields.email.input.value = popupEmail;
+    if (fields.message && fields.message.input) fields.message.input.value = popupMessage;
+  }
+
+  if (leadPopupForm) {
+    Object.keys(leadPopupFields).forEach(function (key) {
+      const field = leadPopupFields[key];
+      if (!field.input) return;
+      field.input.addEventListener("input", function () {
+        if (key === "phone") {
+          field.input.value = field.input.value.replace(/[^\d\s\-()]/g, "");
+        }
+        setError(field, false);
+        if (leadPopupError) leadPopupError.classList.remove("is-visible");
+      });
+      field.input.addEventListener("change", function () {
+        setError(field, false);
+        if (leadPopupError) leadPopupError.classList.remove("is-visible");
+      });
+    });
+
+    leadPopupCloseButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        closeLeadPopup();
+      });
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && leadPopup && leadPopup.classList.contains("is-visible")) {
+        closeLeadPopup();
+      }
+    });
+
+    leadPopupForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const validatedPhone = validateLeadPopupForm();
+      if (!validatedPhone) return;
+
+      copyLeadPopupIntoMainForm(validatedPhone);
+      if (leadPopupSubmit) {
+        leadPopupSubmit.disabled = true;
+        leadPopupSubmit.textContent = "Submitting...";
+      }
+      closeLeadPopup({ remember: false });
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+
+    window.setTimeout(function () {
+      if (document.hidden) {
+        const openWhenVisible = function () {
+          if (!document.hidden) {
+            document.removeEventListener("visibilitychange", openWhenVisible);
+            openLeadPopup();
+          }
+        };
+        document.addEventListener("visibilitychange", openWhenVisible);
+        return;
+      }
+      openLeadPopup();
+    }, leadPopupDelayMs);
+  }
 
   const whatsappCtas = Array.from(document.querySelectorAll("[data-whatsapp-cta]"));
   const whatsappModal = document.querySelector("[data-whatsapp-modal]");
@@ -2226,7 +2463,6 @@
 
     let valid = true;
     let firstInvalidField = null;
-    let firstInvalidKey = "";
     let validatedPhone = null;
     Object.keys(fields).forEach(function (key) {
       const field = fields[key];

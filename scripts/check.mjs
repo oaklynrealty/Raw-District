@@ -112,6 +112,17 @@ const requiredVisibleFields = [
   'name="property_type"',
 ];
 
+const requiredPopupFields = [
+  'data-lead-popup',
+  'id="leadPopupForm"',
+  'id="lead_popup_full_name" name="full_name"',
+  'id="lead_popup_phone_country" name="phone_country_code"',
+  'id="lead_popup_phone" name="phone"',
+  'id="lead_popup_email" name="email"',
+  'id="lead_popup_message" name="message"',
+  'data-popup-lead-form',
+];
+
 const forbiddenSensitiveFields = [
   'name="passport"',
   'name="emirates_id"',
@@ -156,6 +167,8 @@ assert(standaloneEnglishHtml.includes("raw-location-map"), "index-en.html: missi
 assert(standaloneEnglishHtml.includes("https://maps.app.goo.gl/6sCPZCeR6Sp5XHSj6"), "index-en.html: missing direct Google Maps link");
 assert(standaloneEnglishHtml.includes("https://www.google.com/maps?q=24.9770521,55.0917547"), "index-en.html: missing Google Maps embed coordinates");
 assert(standaloneEnglishHtml.includes("data-map-link"), "index-en.html: missing tracked map CTA");
+assert(clientJs.includes("const leadPopupDelayMs = 15000"), "client.js: lead popup should open after 15 seconds");
+assert(clientJs.includes("copyLeadPopupIntoMainForm"), "client.js: lead popup should reuse the main form submit path");
 
 for (const file of [`${publicRoutePath}/index.html`]) {
   const html = await readFile(path.join(distDir, file), "utf8");
@@ -197,6 +210,10 @@ for (const file of landingFiles) {
 
   for (const field of requiredVisibleFields) {
     assert(html.includes(field), `${file}: missing compliant form field ${field}`);
+  }
+
+  for (const field of requiredPopupFields) {
+    assert(html.includes(field), `${file}: missing required popup lead field ${field}`);
   }
 
   for (const field of forbiddenSensitiveFields) {
