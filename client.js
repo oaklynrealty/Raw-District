@@ -657,7 +657,34 @@
     return requestBody;
   }
 
+  function validateWebhookLeadPayload(payload) {
+    const fullName = String(payload && (payload.full_name || payload.name) ? payload.full_name || payload.name : "").trim();
+    const phone = normalizePhone(payload && (payload.phone || payload.phone_number) ? payload.phone || payload.phone_number : "");
+    const phoneCountryCode = String(payload && payload.phone_country_code ? payload.phone_country_code : "").trim();
+    const email = normalizeEmailValue(payload && payload.email ? payload.email : "");
+
+    if (fullName.length < 2) return "full name is missing";
+    if (!phoneCountryCode) return "country code is missing";
+    if (!phone || phone.replace(/\D/g, "").length < 8) return "phone number is missing";
+    if (!email || !isValidEmailValue(email)) return "email is invalid";
+
+    return "";
+  }
+
   function submitFormWebhook(payload) {
+    const payloadError = validateWebhookLeadPayload(payload || {});
+
+    if (payloadError) {
+      pushDataLayerEvent({
+        event: "lead_webhook_blocked_empty_payload",
+        project: config.project_name,
+        project_name: config.project_name,
+        project_slug: config.project_slug,
+        block_reason: payloadError
+      });
+      return Promise.reject(new Error("Blocked empty lead payload: " + payloadError));
+    }
+
     if (!config.webhook_url) {
       return Promise.reject(new Error("Missing form webhook URL."));
     }

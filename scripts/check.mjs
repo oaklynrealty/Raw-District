@@ -213,6 +213,9 @@ assert(stylesCss.includes("min-height: 74px;"), "Stylesheet: Raw District inquir
 assert(stylesCss.includes("@media (max-width: 1080px)"), "Stylesheet: Raw District lead form needs tablet stacking");
 assert(clientJs.includes("const leadPopupDelayMs = 15000"), "client.js: lead popup should open after 15 seconds");
 assert(clientJs.includes("copyLeadPopupIntoMainForm"), "client.js: lead popup should reuse the main form submit path");
+assert(clientJs.includes("validateWebhookLeadPayload"), "client.js: missing final required lead payload validator before Zapier");
+assert(clientJs.includes("lead_webhook_blocked_empty_payload"), "client.js: missing blocked empty-payload tracking event");
+assert(clientJs.includes("Blocked empty lead payload"), "client.js: missing empty lead webhook blocker");
 assert(clientJs.includes("function setupPageMotion()"), "client.js: missing page motion setup");
 assert(clientJs.includes("IntersectionObserver"), "client.js: missing scroll reveal observer");
 assert(!clientJs.includes("leadPopupStorageKey"), "client.js: dismissed lead popup should not be persisted across refresh");
