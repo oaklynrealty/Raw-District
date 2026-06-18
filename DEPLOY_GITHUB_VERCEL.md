@@ -46,9 +46,9 @@ After deployment, submit one internal test lead and verify:
 - CRM receives the lead.
 - Thank-you redirect opens `/thank-you`.
 - The language switcher appears on the landing page, and sends users to the correct English or Arabic content without exposing the hidden routes as public ad URLs.
-- GTM receives `lead_success` on form submit.
+- GTM receives `lead_success` only after the Zapier webhook succeeds.
 - Thank-you page pushes `lead_thank_you_page_view`.
-- Thank-you page pushes `lead_conversion_thank_you`.
+- Thank-you page does not push a conversion event. Use `lead_success` for form conversions.
 
 ## Before You Deploy
 

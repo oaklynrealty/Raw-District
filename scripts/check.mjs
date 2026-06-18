@@ -237,7 +237,7 @@ for (const file of [`${publicThankYouPath}/index.html`]) {
   const html = await readFile(path.join(distDir, file), "utf8");
   assert(html.includes(GTM_CONTAINER_ID), `${file}: missing public thank-you GTM container`);
   assert(html.includes("lead_thank_you_page_view"), `${file}: missing public thank-you pageview event`);
-  assert(html.includes("lead_conversion_thank_you"), `${file}: missing public thank-you conversion event`);
+  assert(!html.includes("lead_conversion_thank_you"), `${file}: public thank-you page must not fire form conversion without CRM webhook success`);
 }
 
 const landingFiles = [
@@ -251,7 +251,7 @@ const landingFiles = [
 for (const file of landingFiles) {
   const html = await readFile(path.join(distDir, file), "utf8");
   assert(html.includes(project.webhookUrl), `${file}: missing form webhook URL`);
-  assert(html.includes(project.whatsappWebhookUrl), `${file}: missing WhatsApp webhook URL`);
+  assert(html.includes('"whatsapp_webhook_url": ""'), `${file}: WhatsApp webhook must remain blank for direct WhatsApp clicks`);
   assert(html.includes("wa.me/971505886769"), `${file}: missing correct WhatsApp number`);
   assert(!html.includes("wa.me/971585835230"), `${file}: WhatsApp should not use call number`);
   assert(!html.includes("whatsapp-modal-status"), `${file}: should not render WhatsApp modal progress section`);
@@ -330,7 +330,7 @@ for (const file of [`${publicThankYouPath}/index.html`, `${englishInternalThankY
   const html = await readFile(path.join(distDir, file), "utf8");
   assert(html.includes(GTM_CONTAINER_ID), `${file}: missing GTM container`);
   assert(html.includes("lead_thank_you_page_view"), `${file}: missing thank-you pageview event`);
-  assert(html.includes("lead_conversion_thank_you"), `${file}: missing thank-you conversion event`);
+  assert(!html.includes("lead_conversion_thank_you"), `${file}: thank-you page must not fire form conversion without CRM webhook success`);
   assert(html.includes("event_id"), `${file}: missing event_id`);
   assert(html.includes("lead_id"), `${file}: missing lead_id`);
   validateJsonLd(html, file);
