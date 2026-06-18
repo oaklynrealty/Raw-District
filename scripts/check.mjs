@@ -171,12 +171,15 @@ assert(standaloneEnglishHtml.includes("template-exterior-master-aerial.png"), "i
 assert(standaloneEnglishHtml.includes("raw-location-map"), "index-en.html: missing embedded Google map location block");
 assert(standaloneEnglishHtml.includes("https://maps.app.goo.gl/6sCPZCeR6Sp5XHSj6"), "index-en.html: missing direct Google Maps link");
 assert(standaloneEnglishHtml.includes("https://www.google.com/maps?q=24.9770521,55.0917547"), "index-en.html: missing Google Maps embed coordinates");
-assert(standaloneEnglishHtml.includes("styles.css?v=20260617-mobile-gallery-v2"), "index-en.html: missing cache-busted mobile gallery stylesheet version");
+assert(standaloneEnglishHtml.includes("styles.css?v=20260618-permit-qr"), "index-en.html: missing cache-busted permit QR stylesheet version");
 assert(standaloneEnglishHtml.includes("data-map-link"), "index-en.html: missing tracked map CTA");
 assert(standaloneEnglishHtml.includes("raw-consultant-section"), "index-en.html: missing consultant CTA section");
 assert(standaloneEnglishHtml.includes("oaklyn-property-consultant.jpg"), "index-en.html: missing consultant photo");
 assert(standaloneEnglishHtml.includes('data-cta-location="consultant_section"'), "index-en.html: missing tracked consultant WhatsApp CTA");
 assert(!standaloneEnglishHtml.toLowerCase().includes("camila"), "index-en.html: consultant section should not mention the consultant name");
+assert(standaloneEnglishHtml.includes("permit-qr-badge"), "index-en.html: missing fixed permit QR badge");
+assert(standaloneEnglishHtml.includes("permit-qr.jpeg?v=20260618-permit-qr"), "index-en.html: missing cache-busted permit QR image");
+assert(stylesCss.includes(".template-raw-ar .permit-qr-badge"), "Stylesheet: missing fixed permit QR badge styles");
 assert(stylesCss.includes("scroll-margin-top: 90px"), "Stylesheet: Raw District location section needs hash-scroll spacing");
 assert(stylesCss.includes("height: clamp(400px, 38vw, 540px)"), "Stylesheet: Raw District map frame needs stable desktop height");
 assert(stylesCss.includes(".template-raw-ar .raw-location-map iframe"), "Stylesheet: Raw District map iframe needs full-frame styling");
@@ -298,6 +301,8 @@ assert(standaloneArabicHtml.indexOf('id="contact"') > standaloneArabicHtml.index
 assert(standaloneArabicHtml.includes('data-cta-location="footer_contact"'), "Standalone Arabic file: missing footer WhatsApp contact link");
 assert(standaloneArabicHtml.includes('data-cta-location="floating_icon"'), "Standalone Arabic file: missing floating WhatsApp icon link");
 assert(standaloneArabicHtml.includes("ti-brand-whatsapp"), "Standalone Arabic file: missing WhatsApp icon");
+assert(standaloneArabicHtml.includes("permit-qr-badge"), "Standalone Arabic file: missing fixed permit QR badge");
+assert(standaloneArabicHtml.includes("permit-qr.jpeg?v=20260618-permit-qr"), "Standalone Arabic file: missing cache-busted permit QR image");
 assert(stylesCss.includes(".template-raw-ar .whatsapp-float-wrap"), "Stylesheet: missing Arabic floating WhatsApp override");
 assert(standaloneArabicHtml.includes("footer-call-icon"), "Standalone Arabic file: missing footer call icon link");
 assert(!standaloneArabicHtml.includes(`<span>${project.brand.phoneDisplay}</span>`), "Standalone Arabic file: call number should not be visible in nav span");

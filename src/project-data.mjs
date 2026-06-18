@@ -15,7 +15,7 @@ export const project = {
   routePath: "/__oaklyn-lang/en",
   alternateThankYouPath: "/__oaklyn-lang/en-thank-you",
   homeHref: "/",
-  assetVersion: "20260617-mobile-gallery-v2",
+  assetVersion: "20260618-permit-qr",
   landingTemplate: "raw-ar-attached-template",
   launchBanner: null,
   webhookUrl: "https://hooks.zapier.com/hooks/catch/27424919/uvzwm7a/",
@@ -352,7 +352,7 @@ export const arabicProject = {
   thankYouPageUrl: "https://raw-district-ae.oaklynrealty.ae/thank-you/",
   routePath: "/__oaklyn-lang/ar",
   alternateThankYouPath: "/__oaklyn-lang/ar-thank-you",
-  assetVersion: "20260610-new-ar-template",
+  assetVersion: "20260618-permit-qr",
   landingTemplate: "raw-ar-attached-template",
   launchBanner: null,
   seo: {
