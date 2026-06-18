@@ -586,9 +586,66 @@
     window.dataLayer.push(payload);
   }
 
+  function splitFullNameForMatching(fullName) {
+    const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+    return {
+      firstName: parts[0] || "",
+      lastName: parts.length > 1 ? parts.slice(1).join(" ") : ""
+    };
+  }
+
+  function buildLeadMatchData(payload) {
+    const fullName = String(payload && (payload.full_name || payload.name) ? payload.full_name || payload.name : "").trim();
+    const splitName = splitFullNameForMatching(fullName);
+    const firstName = String(payload && payload.first_name ? payload.first_name : splitName.firstName).trim();
+    const lastName = String(payload && payload.last_name ? payload.last_name : splitName.lastName).trim();
+    const email = normalizeEmailValue(payload && payload.email ? payload.email : "");
+    const phone = normalizePhone(payload && (payload.phone || payload.phone_number) ? payload.phone || payload.phone_number : "");
+    const externalId = payload && payload.lead_id ? String(payload.lead_id) : "";
+
+    return {
+      email: email,
+      phone: phone,
+      full_name: fullName,
+      first_name: firstName,
+      last_name: lastName,
+      external_id: externalId,
+      em: email,
+      ph: phone,
+      fn: firstName.toLowerCase(),
+      ln: lastName.toLowerCase()
+    };
+  }
+
+  function buildLeadMatchingTrackingFields(matchData) {
+    const data = matchData || {};
+    return {
+      lead_email: data.email || "",
+      lead_phone: data.phone || "",
+      lead_full_name: data.full_name || "",
+      lead_first_name: data.first_name || "",
+      lead_last_name: data.last_name || "",
+      external_id: data.external_id || "",
+      meta_advanced_matching: {
+        em: data.em || data.email || "",
+        ph: data.ph || data.phone || "",
+        fn: data.fn || "",
+        ln: data.ln || "",
+        external_id: data.external_id || ""
+      }
+    };
+  }
+
   function setLeadMatchKeys(payload) {
-    window._leadEmail = normalizeEmailValue(payload && payload.email ? payload.email : "");
-    window._leadPhone = normalizePhone(payload && payload.phone ? payload.phone : "");
+    const matchData = buildLeadMatchData(payload || {});
+    window._leadEmail = matchData.email;
+    window._leadPhone = matchData.phone;
+    window._leadFullName = matchData.full_name;
+    window._leadFirstName = matchData.first_name;
+    window._leadLastName = matchData.last_name;
+    window._leadExternalId = matchData.external_id;
+    window.oaklynLeadMatchData = matchData;
+    return matchData;
   }
 
   function encodeWebhookPayload(payload) {
@@ -2421,16 +2478,6 @@
           )
         );
 
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({
-          event: "oaklyn_internal_success",
-          conversion_type: "whatsapp",
-          project_name: config.project_name,
-          project_slug: config.project_slug,
-          lead_id: whatsappLeadPayload.lead_id,
-          event_id: whatsappLeadPayload.lead_id,
-          blacklist_status: "clear"
-        });
         window.location.assign(destinationUrl);
       } catch (error) {
         console.error("[whatsapp] Blacklist check failed", error);
@@ -2716,33 +2763,36 @@
       );
 
       let webhookSucceeded = false;
+      let leadMatchData = null;
 
       submitFormWebhook(payload)
         .then(function () {
           webhookSucceeded = true;
           writeFormSubmissionState(formSubmissionKey, leadId, "submitted");
-          setLeadMatchKeys({
-            email: formEmail,
-            phone: formPhone
-          });
-          window.dataLayer = window.dataLayer || [];
-          window.dataLayer.push({
-            event: "oaklyn_internal_success",
-            conversion_type: "form",
-            project_name: config.project_name,
-            project_slug: config.project_slug,
-            lead_id: leadId,
-            event_id: leadId,
-            blacklist_status: "clear",
-            webhook_status: "success"
-          });
-          pushDataLayerEvent({
-            event: "form_webhook_success",
-            project: config.project_name,
-            project_name: config.project_name,
-            project_slug: config.project_slug,
-            lead_id: leadId
-          });
+          leadMatchData = setLeadMatchKeys(
+            Object.assign({}, payload, {
+              lead_id: leadId,
+              email: formEmail,
+              phone: formPhone
+            })
+          );
+          pushDataLayerEvent(
+            Object.assign(
+              {
+                event: "form_webhook_success",
+                project: config.project_name,
+                project_name: config.project_name,
+                project_slug: config.project_slug,
+                lead_id: leadId,
+                event_id: leadId,
+                blacklist_status: "clear",
+                webhook_status: "success"
+              },
+              buildLeadMatchingTrackingFields(leadMatchData),
+              clickIds,
+              utmData
+            )
+          );
         })
         .catch(function (error) {
           console.error("Webhook submit error:", error);
@@ -2765,15 +2815,35 @@
         })
         .finally(function () {
           if (!webhookSucceeded) return;
-          pushDataLayerEvent({
-            event: "lead_success",
-            project: config.project_name,
-            project_name: config.project_name,
-            project_slug: config.project_slug,
-            lead_id: leadId
-          });
+          leadMatchData = leadMatchData || buildLeadMatchData(payload);
+          pushDataLayerEvent(
+            Object.assign(
+              {
+                event: "lead_success",
+                conversion_type: "form",
+                conversion_action: "form_submission",
+                project: config.project_name,
+                project_name: config.project_name,
+                project_slug: config.project_slug,
+                lead_id: leadId,
+                event_id: leadId,
+                form_submission_confirmed: true,
+                blacklist_status: "clear",
+                webhook_status: "success",
+                preferred_unit: formUnit,
+                preferred_project: formUnit,
+                property_type: formInquiry,
+                inquiry_type: formInquiry
+              },
+              buildLeadMatchingTrackingFields(leadMatchData),
+              clickIds,
+              utmData
+            )
+          );
           writeLeadSuccessState(leadId);
-          window.location.href = buildThankYouUrl(leadId);
+          window.setTimeout(function () {
+            window.location.href = buildThankYouUrl(leadId);
+          }, 350);
         });
     });
   });
