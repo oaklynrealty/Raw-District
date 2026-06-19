@@ -126,7 +126,7 @@ const requiredVisibleFields = [
   'name="property_type"',
 ];
 
-const requiredPopupFields = [
+const forbiddenPopupTerms = [
   'data-lead-popup',
   'id="leadPopupForm"',
   'id="lead_popup_full_name" name="full_name"',
@@ -135,6 +135,8 @@ const requiredPopupFields = [
   'id="lead_popup_email" name="email"',
   'id="lead_popup_message" name="message"',
   'data-popup-lead-form',
+  "lead-popup",
+  "lead_popup_",
 ];
 
 const forbiddenSensitiveFields = [
@@ -211,15 +213,16 @@ assert(stylesCss.includes("@keyframes rawWhatsappRing"), "Stylesheet: missing Wh
 assert(stylesCss.includes(".template-raw-ar .lead-strip-section .field.is-message"), "Stylesheet: Raw District inquiry field should span the lead form");
 assert(stylesCss.includes("min-height: 74px;"), "Stylesheet: Raw District inquiry field needs usable height");
 assert(stylesCss.includes("@media (max-width: 1080px)"), "Stylesheet: Raw District lead form needs tablet stacking");
-assert(clientJs.includes("const leadPopupDelayMs = 15000"), "client.js: lead popup should open after 15 seconds");
-assert(clientJs.includes("copyLeadPopupIntoMainForm"), "client.js: lead popup should reuse the main form submit path");
 assert(clientJs.includes("validateWebhookLeadPayload"), "client.js: missing final required lead payload validator before Zapier");
 assert(clientJs.includes("lead_webhook_blocked_empty_payload"), "client.js: missing blocked empty-payload tracking event");
 assert(clientJs.includes("Blocked empty lead payload"), "client.js: missing empty lead webhook blocker");
 assert(clientJs.includes("function setupPageMotion()"), "client.js: missing page motion setup");
 assert(clientJs.includes("IntersectionObserver"), "client.js: missing scroll reveal observer");
+assert(!clientJs.includes("leadPopupDelayMs"), "client.js: popup form timer should not exist");
+assert(!clientJs.includes("copyLeadPopupIntoMainForm"), "client.js: popup form submit path should not exist");
 assert(!clientJs.includes("leadPopupStorageKey"), "client.js: dismissed lead popup should not be persisted across refresh");
 assert(!clientJs.includes("_lead_popup_closed"), "client.js: lead popup close state should reset on refresh");
+assert(!stylesCss.includes(".lead-popup"), "Stylesheet: popup lead form styles should not exist");
 
 for (const file of [`${publicRoutePath}/index.html`]) {
   const html = await readFile(path.join(distDir, file), "utf8");
@@ -263,8 +266,8 @@ for (const file of landingFiles) {
     assert(html.includes(field), `${file}: missing compliant form field ${field}`);
   }
 
-  for (const field of requiredPopupFields) {
-    assert(html.includes(field), `${file}: missing required popup lead field ${field}`);
+  for (const term of forbiddenPopupTerms) {
+    assert(!html.includes(term), `${file}: popup lead form should not exist ${term}`);
   }
 
   for (const field of forbiddenSensitiveFields) {

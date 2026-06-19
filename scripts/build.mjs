@@ -1215,55 +1215,6 @@ const renderLeadFormSection = (formLabels, options = {}) => {
     </section>`;
 };
 
-const renderLeadPopup = (formLabels) => `
-  <div class="lead-popup" data-lead-popup hidden aria-hidden="true">
-    <div class="lead-popup-backdrop" data-lead-popup-close></div>
-    <section class="lead-popup-dialog" role="dialog" aria-modal="true" aria-labelledby="leadPopupTitle">
-      <button class="lead-popup-close" type="button" data-lead-popup-close aria-label="${escapeHtml(t("whatsapp_close"))}">${escapeHtml(t("whatsapp_close"))}</button>
-      <div class="lead-popup-heading">
-        <span class="eyebrow">${escapeHtml(t("request_information_eyebrow"))}</span>
-        <h2 id="leadPopupTitle">${escapeHtml(project.form.title)}</h2>
-        <p>${renderBrandText(project.form.text)}</p>
-      </div>
-      <form id="leadPopupForm" class="lead-popup-form" data-popup-lead-form novalidate>
-        <div class="field-grid">
-          <div class="field" id="leadPopupNameField" data-popup-field="name">
-            <label for="lead_popup_full_name">${escapeHtml(formLabels.name)}</label>
-            <input id="lead_popup_full_name" name="full_name" type="text" autocomplete="name" placeholder="Full name" required>
-            <div class="field-error">${escapeHtml(t("form_name_error"))}</div>
-          </div>
-          <div class="field is-phone" id="leadPopupPhoneField" data-popup-field="phone">
-            <label for="lead_popup_phone">${escapeHtml(formLabels.phone)}</label>
-            <div class="phone-input-row">
-              ${renderPhoneCountryPicker({
-                inputId: "lead_popup_phone_country",
-                inputName: "phone_country_code",
-                pickerKey: "lead_popup",
-                searchId: "lead_popup_country_search",
-                includeOptions: false,
-              })}
-              <input id="lead_popup_phone" name="phone" type="tel" inputmode="tel" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="20" placeholder="${escapeHtml(t("form_phone_placeholder"))}" required>
-            </div>
-            <div class="field-error">${escapeHtml(t("form_phone_error"))}</div>
-          </div>
-          <div class="field" id="leadPopupEmailField" data-popup-field="email">
-            <label for="lead_popup_email">${escapeHtml(formLabels.email)}</label>
-            <input id="lead_popup_email" name="email" type="email" autocomplete="email" placeholder="email@example.com" required>
-            <div class="field-error">${escapeHtml(t("form_email_error"))}</div>
-          </div>
-          <div class="field is-message" id="leadPopupMessageField" data-popup-field="message">
-            <label for="lead_popup_message">${escapeHtml(formLabels.message)}</label>
-            <textarea id="lead_popup_message" name="message" rows="3" maxlength="600" placeholder="${escapeHtml(t("form_message_placeholder"))}" required></textarea>
-            <div class="field-error">${escapeHtml(t("form_message_error"))}</div>
-          </div>
-        </div>
-        <div id="leadPopupError" class="form-error">${renderBrandText(t("form_submit_error"))}</div>
-        <button id="leadPopupSubmit" class="btn btn-primary" type="submit">${escapeHtml(t("form_submit"))}</button>
-        <p class="disclaimer">${renderBrandText(project.form.consent)}</p>
-      </form>
-    </section>
-  </div>`;
-
 const renderRawTemplateGallery = () => {
   const items = project.gallery.items || [];
   const feature = items[0] || { eyebrow: project.gallery.eyebrow, title: project.gallery.title, image: project.hero.background };
@@ -1458,7 +1409,6 @@ ${renderRawTemplateNav()}
   ${renderWhatsAppFloat()}
   ${renderPermitQrBadge()}
   ${renderWhatsAppModal()}
-  ${renderLeadPopup(formLabels)}
   <div class="mobile-contact-bar">
     <a href="tel:${escapeHtml(company.phoneHref)}">${escapeHtml(t("mobile_call"))}</a>
     ${renderWhatsAppLink({ label: t("mobile_whatsapp"), location: "mobile_contact_bar" })}
