@@ -620,10 +620,10 @@ const renderPermitQrBadge = () => {
   const ariaLabel = isArabic ? "عرض رمز تصريح المشروع" : "View project permit QR code";
   const image = withAssetVersion("/assets/raw-district/permit-qr.jpeg");
 
-  return `<a class="permit-qr-badge" href="${escapeHtml(image)}" target="_blank" rel="noopener" aria-label="${escapeHtml(ariaLabel)}" data-permit-qr-badge>
+  return `<div class="permit-qr-badge" role="img" aria-label="${escapeHtml(ariaLabel)}" data-permit-qr-badge>
     <img src="${escapeHtml(image)}" alt="${escapeHtml(label)}" loading="lazy" decoding="async">
     <span>${escapeHtml(label)}</span>
-  </a>`;
+  </div>`;
 };
 
 const renderWhatsAppModal = () => `

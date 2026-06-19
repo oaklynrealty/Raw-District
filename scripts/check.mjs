@@ -195,7 +195,9 @@ assert(standaloneEnglishHtml.includes('data-cta-location="consultant_section"'),
 assert(!standaloneEnglishHtml.toLowerCase().includes("camila"), "index-en.html: consultant section should not mention the consultant name");
 assert(standaloneEnglishHtml.includes("permit-qr-badge"), "index-en.html: missing fixed permit QR badge");
 assert(standaloneEnglishHtml.includes("permit-qr.jpeg?v=20260618-permit-qr"), "index-en.html: missing cache-busted permit QR image");
+assert(!standaloneEnglishHtml.includes('<a class="permit-qr-badge"'), "index-en.html: permit QR badge should not be clickable");
 assert(stylesCss.includes(".template-raw-ar .permit-qr-badge"), "Stylesheet: missing fixed permit QR badge styles");
+assert(stylesCss.includes("pointer-events: none;"), "Stylesheet: permit QR badge should not capture clicks");
 assert(stylesCss.includes("scroll-margin-top: 90px"), "Stylesheet: Raw District location section needs hash-scroll spacing");
 assert(stylesCss.includes("height: clamp(400px, 38vw, 540px)"), "Stylesheet: Raw District map frame needs stable desktop height");
 assert(stylesCss.includes(".template-raw-ar .raw-location-map iframe"), "Stylesheet: Raw District map iframe needs full-frame styling");
@@ -323,6 +325,7 @@ assert(standaloneArabicHtml.includes('data-cta-location="floating_icon"'), "Stan
 assert(standaloneArabicHtml.includes("ti-brand-whatsapp"), "Standalone Arabic file: missing WhatsApp icon");
 assert(standaloneArabicHtml.includes("permit-qr-badge"), "Standalone Arabic file: missing fixed permit QR badge");
 assert(standaloneArabicHtml.includes("permit-qr.jpeg?v=20260618-permit-qr"), "Standalone Arabic file: missing cache-busted permit QR image");
+assert(!standaloneArabicHtml.includes('<a class="permit-qr-badge"'), "Standalone Arabic file: permit QR badge should not be clickable");
 assert(stylesCss.includes(".template-raw-ar .whatsapp-float-wrap"), "Stylesheet: missing Arabic floating WhatsApp override");
 assert(standaloneArabicHtml.includes("footer-call-icon"), "Standalone Arabic file: missing footer call icon link");
 assert(!standaloneArabicHtml.includes(`<span>${project.brand.phoneDisplay}</span>`), "Standalone Arabic file: call number should not be visible in nav span");
