@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+  <title id="title">Raw District exterior concept artwork</title>
+  <desc id="desc">Abstract exterior skyline artwork inspired by a modern mixed-use tower composition.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#162330"/>
+      <stop offset="100%" stop-color="#7a5730"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="900" fill="url(#bg)"/>
+  <circle cx="1094" cy="176" r="214" fill="#f1d2a1" opacity="0.2"/>
+  <path d="M0 706C140 666 248 650 344 662C484 680 578 774 714 774C866 774 938 664 1088 648C1200 636 1300 664 1400 654V900H0Z" fill="#f7efe3" opacity="0.14"/>
+  <rect x="0" y="666" width="1400" height="234" fill="#0f1723" opacity="0.26"/>
+  <g opacity="0.95">
+    <rect x="764" y="232" width="146" height="430" rx="18" fill="#213242"/>
+    <rect x="930" y="164" width="212" height="498" rx="18" fill="#162635"/>
+    <rect x="688" y="308" width="64" height="354" rx="14" fill="#283a48"/>
+  </g>
+  <g opacity="0.48">
+    <rect x="790" y="266" width="10" height="352" fill="#f4d7a8"/>
+    <rect x="826" y="266" width="10" height="352" fill="#f4d7a8"/>
+    <rect x="962" y="196" width="14" height="420" fill="#f4d7a8"/>
+    <rect x="1018" y="196" width="14" height="420" fill="#f4d7a8"/>
+    <rect x="1074" y="196" width="14" height="420" fill="#f4d7a8"/>
+  </g>
+  <path d="M118 620C268 612 404 616 562 630C718 644 858 644 1002 628C1118 616 1218 614 1312 620" stroke="#74cad4" stroke-opacity="0.5" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="268" cy="620" r="11" fill="#f3d4a1"/>
+  <circle cx="812" cy="640" r="11" fill="#f3d4a1"/>
+  <circle cx="1182" cy="620" r="11" fill="#f3d4a1"/>
+</svg>

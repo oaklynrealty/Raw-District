@@ -1,128 +1,13 @@
-import { cp, mkdir, rm, writeFile, copyFile, stat } from "node:fs/promises";
+import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { project as landingProject, arabicProject } from "../src/project-data.mjs";
+import { project } from "../src/project-data.mjs";
 import { renderGtmBody, renderGtmHead } from "../shared/gtm.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const distDir = path.join(rootDir, "dist");
-
-let project = landingProject;
-let company = project.brand;
-
-const defaultUiText = {
-  nav_overview: "Overview",
-  nav_gallery: "Gallery",
-  nav_location: "Location",
-  nav_contact: "Contact",
-  nav_website: "Oaklyn Website",
-  nav_request_details: "Request Details",
-  brand_aria_suffix: "landing page",
-  primary_nav_aria: "Primary navigation",
-  mobile_nav_aria: "Mobile navigation",
-  hero_whatsapp_cta: "Chat on WhatsApp",
-  mobile_menu_label: "Menu",
-  quick_highlights_eyebrow: "Quick Investment Highlights",
-  quick_highlights_title: "Project facts at a glance",
-  request_information_eyebrow: "Request Information",
-  basic_enquiry_only: "Basic enquiry details only",
-  subject_to_confirmation: "Subject to developer confirmation",
-  no_guaranteed_returns: "No guaranteed investment returns",
-  form_name_error: "Please enter your full name.",
-  form_phone_placeholder: "050 123 4567",
-  form_phone_error: "Please enter a valid international phone number.",
-  form_email_error: "Please enter a valid email address.",
-  form_message_error: "Please add a short inquiry.",
-  form_message_placeholder: "Tell us what you would like to know.",
-  form_select_error: "Please select an option.",
-  form_submit: "Request Project Information",
-  form_submit_error: "We could not submit your enquiry. Please try again or contact Oaklyn Realty directly.",
-  form_success_title: "Thank you",
-  blocked_success_title: "Thank you",
-  form_success_copy_prefix: "Your enquiry has been received. Oaklyn Realty will contact you regarding",
-  faq_eyebrow: "FAQ",
-  faq_title: "Quick answers",
-  trust_eyebrow: "Trust & Compliance",
-  trust_title: "Clear, compliant enquiry process",
-  footer_about_text:
-    "Oaklyn Realty is a Dubai real estate brokerage helping you review project details, availability, and enquiry next steps with clear communication.",
-  footer_contact_heading: "Contact",
-  footer_legal_heading: "Legal",
-  footer_about_link: "About Us",
-  footer_contact_link: "Contact",
-  footer_privacy_link: "Privacy Policy",
-  footer_terms_link: "Terms & Conditions",
-  footer_copyright:
-    "Oaklyn Real Estate L.L.C. — DED Licence 1589593 · RERA ORN 59210. Regulated by Dubai DET and Dubai Land Department.",
-  whatsapp_floating_label: "Chat on WhatsApp",
-  whatsapp_close: "Close",
-  whatsapp_eyebrow: "Quick Verification",
-  whatsapp_title: "Continue to WhatsApp",
-  whatsapp_copy: "Enter your number for a quick verification before we open WhatsApp.",
-  whatsapp_country_code: "Country Code",
-  whatsapp_phone: "WhatsApp Number",
-  whatsapp_phone_placeholder: "50 123 4567",
-  whatsapp_phone_error: "Please enter a valid phone number to continue.",
-  whatsapp_note: "We use this step to filter duplicate and blocked numbers before WhatsApp opens.",
-  whatsapp_error: "We could not continue to WhatsApp right now. Please try again.",
-  whatsapp_continue: "Continue to WhatsApp",
-  verification_headline_1: "Verifying your information...",
-  verification_headline_2: "Checking availability...",
-  verification_headline_3: "Securing your consultation slot...",
-  verification_headline_4: "Connecting you with your advisor...",
-  verification_sub_1: "This usually takes a few seconds",
-  verification_sub_2: "Your data is encrypted and secure",
-  verification_sub_3: "We never share your information",
-  verification_sub_4: "Almost ready...",
-  verification_trust_1: "🔒 SSL Secured",
-  verification_trust_2: "✓ RERA Registered",
-  verification_trust_3: "🛡 Data Protected",
-  cancel: "Cancel",
-  gallery_prev: "Previous gallery image",
-  gallery_next: "Next gallery image",
-  gallery_dot_aria: "Go to gallery image {index}",
-  phone_search_sr_label: "Search country or code",
-  phone_search_placeholder: "Type exact code or country",
-  phone_search_empty: "No country found.",
-  validation_name: "Please enter your name.",
-  validation_first_name: "Please enter your first name.",
-  validation_last_name: "Please enter your last name.",
-  thank_you_meta_title_prefix: "Thank You",
-  thank_you_meta_description: "Your Oaklyn Realty property enquiry has been received.",
-  thank_you_eyebrow: "Enquiry Received",
-  thank_you_title: "Thank you. Our property consultant will contact you shortly.",
-  thank_you_copy_prefix:
-    "Oaklyn Realty has received your enquiry for",
-  thank_you_copy_suffix: "We will not ask for sensitive personal information through this form.",
-  back_to_project: "Back to Project",
-  contact_oaklyn: "Contact Oaklyn",
-  mobile_call: "Call",
-  mobile_whatsapp: "WhatsApp"
-};
-
-const setProject = (nextProject) => {
-  project = nextProject;
-  company = project.brand;
-};
-
-const t = (key, fallback) => {
-  if (project?.uiText && Object.prototype.hasOwnProperty.call(project.uiText, key)) {
-    return project.uiText[key];
-  }
-  if (fallback !== undefined) return fallback;
-  return defaultUiText[key] || "";
-};
-
-const getLocaleLang = () => project.locale?.lang || "en";
-const getLocaleDir = () => project.locale?.dir || "ltr";
-const getBodyClass = (...classes) =>
-  [getLocaleDir() === "rtl" ? "is-rtl" : "", ...classes].filter(Boolean).join(" ");
-const formatLocalizedNumber = (value) => {
-  const text = String(value);
-  if (getLocaleLang() !== "ar") return text;
-  return text.replace(/[0-9]/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[Number(digit)]);
-};
+const company = project.brand;
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -132,277 +17,49 @@ const escapeHtml = (value = "") =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
-const renderBrandText = (value = "") =>
-  escapeHtml(value).replaceAll(
-    "Oaklyn Realty",
-    '<span class="brand-inline">Oaklyn Realty</span>',
-  );
-
 const json = (data) => JSON.stringify(data, null, 2).replaceAll("</script", "<\\/script");
 const renderJsonLd = (data) => `<script type="application/ld+json">\n${json(data)}\n</script>`;
 const trimSlashes = (value = "") => String(value).replace(/^\/+|\/+$/g, "");
-const languagePreferenceStorageKey = "oaklyn_lang_pref_raw_district_v2";
 const digitsOnly = (value = "") => String(value).replace(/[^\d]/g, "");
-const slugify = (value = "") =>
-  String(value)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-const withAssetVersion = (value = "") => {
-  const stringValue = String(value || "");
-  if (!stringValue.startsWith("/assets/")) return stringValue;
-  return `${stringValue}${stringValue.includes("?") ? "&" : "?"}v=${encodeURIComponent(project.assetVersion)}`;
+const withVersion = (src = "") => {
+  if (!String(src).startsWith("/assets/")) return src;
+  return `${src}${String(src).includes("?") ? "&" : "?"}v=${encodeURIComponent(project.assetVersion)}`;
 };
 
-const toAbsoluteUrl = (value = "", fallback = project.landingPageUrl) => {
-  const stringValue = withAssetVersion(String(value || fallback || ""));
-  if (!stringValue) return "";
+const absoluteUrl = (value = "", fallback = project.landingPageUrl) => {
   try {
-    return new URL(stringValue, project.landingPageUrl).href;
-  } catch (error) {
-    return stringValue;
+    return new URL(value || fallback, project.landingPageUrl).href;
+  } catch {
+    return value || fallback;
   }
 };
 
-const getProjectImageUrls = () => {
-  const imageCandidates = [
-    project.seo?.image,
-    project.hero?.background,
-    ...(project.gallery?.items || []).map((item) => item.image),
-    company.logo,
-  ];
-  return [...new Set(imageCandidates.filter(Boolean).map((image) => toAbsoluteUrl(image)))];
-};
-
-const getSeoImageUrl = () => getProjectImageUrls()[0] || company.logo;
-
-const getOpenGraphLocale = () => (getLocaleLang() === "ar" ? "ar_AE" : "en_AE");
-
-const renderSocialMeta = ({ title, description, canonical }) => {
-  const image = getSeoImageUrl();
-  return [
-    `<meta property="og:type" content="website">`,
-    `<meta property="og:locale" content="${escapeHtml(getOpenGraphLocale())}">`,
-    `<meta property="og:site_name" content="${escapeHtml(company.company)}">`,
-    `<meta property="og:title" content="${escapeHtml(title)}">`,
-    `<meta property="og:description" content="${escapeHtml(description)}">`,
-    `<meta property="og:url" content="${escapeHtml(canonical)}">`,
-    `<meta property="og:image" content="${escapeHtml(image)}">`,
-    `<meta name="twitter:card" content="summary_large_image">`,
-    `<meta name="twitter:title" content="${escapeHtml(title)}">`,
-    `<meta name="twitter:description" content="${escapeHtml(description)}">`,
-    `<meta name="twitter:image" content="${escapeHtml(image)}">`,
-  ].join("\n  ");
-};
-
 const getWhatsAppHref = () => {
-  if (project.whatsappDirectUrl) return project.whatsappDirectUrl;
   const phone = digitsOnly(company.whatsappHref || company.phoneHref);
-  const message = project.whatsappPrefill || `Hello, I would like more information about ${project.name}.`;
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(project.whatsappPrefill)}`;
 };
 
-const getLanguageRouteConfig = (kind = "landing") => ({
-  en: `/${trimSlashes(kind === "thank-you" ? landingProject.alternateThankYouPath : landingProject.routePath)}/`,
-  ar: `/${trimSlashes(kind === "thank-you" ? arabicProject.alternateThankYouPath : arabicProject.routePath)}/`,
-});
-
-const getLanguagePopupConfig = () => ({
-  badge: "Oaklyn Realty",
-  title: "Choose your language",
-  subtitle: "اختر اللغة للمتابعة",
-  englishLabel: "English",
-  arabicLabel: "العربية",
-  loading: "Loading your page..."
-});
-
-const getClientConfig = (options = {}) => ({
-  project_name: project.name,
-  project_slug: project.slug,
-  current_language: project.languageCode || getLocaleLang(),
-  language_preference_key: languagePreferenceStorageKey,
-  language_prompt_enabled: Boolean(options.publicLanguageEntry),
-  language_switcher_enabled: Boolean(options.languageSwitcherEnabled),
-  language_routes: options.languageRoutes || getLanguageRouteConfig("landing"),
-  language_popup: getLanguagePopupConfig(),
-  source_page: project.sourcePage,
-  landing_page_url: project.landingPageUrl,
-  thank_you_page_url: project.thankYouPageUrl,
-  webhook_url: project.webhookUrl,
-  whatsapp_webhook_url: project.whatsappWebhookUrl || "",
-  blacklist_check_url: project.blacklistCheckUrl || "",
-  blacklist_timeout_ms: Number(project.blacklistTimeoutMs) || 8000,
-  blacklist_block_message: project.form.blacklistBlockedMessage || "Thank you. Your inquiry has already been received.",
-  blacklist_block_title: t("blocked_success_title", "Thank you"),
-  blacklist_error_message: project.form.blacklistErrorMessage || "Something went wrong. Please try again.",
-  verification_headlines: [
-    t("verification_headline_1"),
-    t("verification_headline_2"),
-    t("verification_headline_3"),
-    t("verification_headline_4")
-  ],
-  verification_subs: [
-    t("verification_sub_1"),
-    t("verification_sub_2"),
-    t("verification_sub_3"),
-    t("verification_sub_4")
-  ],
-  split_name: Boolean(project.form.splitName),
-});
-
-const renderLanguageShellPage = ({ kind = "landing" } = {}) => {
-  const isThankYou = kind === "thank-you";
-  const publicUrl = isThankYou ? landingProject.thankYouPageUrl : landingProject.landingPageUrl;
-  const title = isThankYou
-    ? "Thank You | Raw District | Oaklyn Realty"
-    : "Raw District | Oaklyn Realty";
-  const description = isThankYou
-    ? "Language-aware thank-you page for Raw District by Oaklyn Realty."
-    : "Choose your preferred language for Raw District and continue on one landing URL.";
-
-  const shellConfig = {
-    kind,
-    storageKey: languagePreferenceStorageKey,
-    routeByLanguage: getLanguageRouteConfig(kind),
-    publicLandingUrl: landingProject.landingPageUrl,
-    publicThankYouUrl: landingProject.thankYouPageUrl,
-    popup: getLanguagePopupConfig()
+const icon = (name) => {
+  const icons = {
+    phone:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.8a16 16 0 0 0 6.1 6.1l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7A2 2 0 0 1 22 16.9z"/></svg>',
+    whatsapp:
+      '<svg class="icon-whatsapp" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.9 11.9 0 0 0 2.9 18.3L2 22l3.8-1A11.9 11.9 0 0 0 12 22a12 12 0 0 0 8.5-18.5ZM12 20a9.8 9.8 0 0 1-5-1.4l-.4-.2-2.2.6.6-2.1-.3-.4A9.9 9.9 0 1 1 12 20Zm5.5-7.4c-.3-.2-1.8-.9-2.1-1s-.5-.1-.7.2-.8 1-1 1.1-.4.2-.7.1a8 8 0 0 1-2.4-1.5 9 9 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.4.3-.6v-.6c0-.2-.7-1.9-1-2.6-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4s-1.2 1.1-1.2 2.8 1.2 3.2 1.4 3.4a12.5 12.5 0 0 0 4.8 4.2c.7.3 1.2.5 1.6.7.7.2 1.3.2 1.8.1.6-.1 1.8-.7 2.1-1.5.3-.7.3-1.4.2-1.5s-.3-.2-.6-.4Z"/></svg>',
+    map:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18-6 3V6l6-3 6 3 6-3v15l-6 3-6-3zM9 3v15m6-12v15"/></svg>',
+    building:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16M8 7h4m-4 4h4m-4 4h4m8 6V9a2 2 0 0 0-2-2h-2M3 21h18"/></svg>',
+    wallet:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7H5a3 3 0 0 0 0 6h15v7H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h13a2 2 0 0 1 2 2v1zm-3 7h.01"/></svg>',
+    check:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>',
+    calendar:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>'
   };
-
-  return `<!doctype html>
-<html lang="en" dir="ltr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtml(title)}</title>
-  <meta name="description" content="${escapeHtml(description)}">
-  <link rel="canonical" href="${escapeHtml(publicUrl)}">
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background:
-        radial-gradient(circle at top, rgba(201, 168, 76, 0.18), transparent 28rem),
-        linear-gradient(180deg, #fbfaf6 0%, #f3eee4 100%);
-      font-family: Inter, sans-serif;
-      color: #0b1d3a;
-    }
-    .lang-shell {
-      width: min(560px, calc(100% - 32px));
-      padding: 32px;
-      border: 1px solid rgba(11, 29, 58, 0.08);
-      border-radius: 28px;
-      background: rgba(255, 255, 255, 0.88);
-      box-shadow: 0 24px 60px rgba(11, 29, 58, 0.12);
-      text-align: center;
-    }
-    .lang-shell-badge {
-      display: inline-flex;
-      margin-bottom: 14px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: rgba(201, 168, 76, 0.14);
-      color: #c9a84c;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-    }
-    .lang-shell h1 {
-      margin: 0 0 10px;
-      font-family: Baskervville, serif;
-      font-size: clamp(2rem, 5vw, 3.3rem);
-      line-height: 1;
-    }
-    .lang-shell p {
-      margin: 0;
-      color: rgba(11, 29, 58, 0.68);
-      font-size: 1rem;
-      line-height: 1.7;
-    }
-    .lang-shell-actions {
-      display: grid;
-      gap: 12px;
-      margin-top: 24px;
-    }
-    .lang-shell-actions button {
-      min-height: 58px;
-      border: 0;
-      border-radius: 18px;
-      font: inherit;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .lang-shell-actions a {
-      display: grid;
-      place-items: center;
-      min-height: 58px;
-      border-radius: 18px;
-      font: inherit;
-      font-size: 1rem;
-      font-weight: 700;
-      text-decoration: none;
-    }
-    .lang-shell-actions button:first-child {
-      background: #0b1d3a;
-      color: #fbfaf6;
-    }
-    .lang-shell-actions button:last-child {
-      background: #c9a84c;
-      color: #0b1d3a;
-    }
-    .lang-shell-actions a:first-child {
-      background: #0b1d3a;
-      color: #fbfaf6;
-    }
-    .lang-shell-actions a:last-child {
-      background: #c9a84c;
-      color: #0b1d3a;
-    }
-    .lang-shell-loading {
-      margin-top: 18px;
-      color: rgba(11, 29, 58, 0.56);
-      font-size: .94rem;
-    }
-    .lang-shell-loading[hidden] {
-      display: none;
-    }
-  </style>
-  <script>window.OAKLYN_LANGUAGE_SHELL = ${json(shellConfig)};</script>
-  <script src="/client.js?v=${escapeHtml(landingProject.assetVersion)}" defer></script>
-</head>
-<body>
-  <main class="lang-shell">
-    <span class="lang-shell-badge">${escapeHtml(shellConfig.popup.badge)}</span>
-    <h1>${escapeHtml(shellConfig.popup.title)}</h1>
-    <p>${escapeHtml(shellConfig.popup.subtitle)}</p>
-    <div class="lang-shell-actions" id="languageShellActions">
-      <a href="${escapeHtml(shellConfig.routeByLanguage.en)}" data-language-choice="en">${escapeHtml(shellConfig.popup.englishLabel)}</a>
-      <a href="${escapeHtml(shellConfig.routeByLanguage.ar)}" data-language-choice="ar">${escapeHtml(shellConfig.popup.arabicLabel)}</a>
-    </div>
-    <p class="lang-shell-loading" id="languageShellLoading" hidden>${escapeHtml(shellConfig.popup.loading)}</p>
-  </main>
-</body>
-</html>`;
+  return icons[name] || icons.check;
 };
 
-const renderWhatsAppLink = ({ className = "", label = "WhatsApp", location = "default", iconOnly = false } = {}) =>
-  `<a class="${escapeHtml(className)}" href="${escapeHtml(getWhatsAppHref())}" target="_blank" rel="noopener" data-whatsapp-cta data-cta-location="${escapeHtml(location)}" data-whatsapp-destination="${escapeHtml(getWhatsAppHref())}"${iconOnly ? ` aria-label="${escapeHtml(label)}"` : ""}>${
-    iconOnly
-      ? `<i class="bx bxl-whatsapp" aria-hidden="true"></i>`
-      : `<i class="ti ti-brand-whatsapp" aria-hidden="true"></i><span>${escapeHtml(label)}</span>`
-  }</a>`;
-
-const renderCallIconLink = ({ className = "", location = "default" } = {}) =>
-  `<a class="${escapeHtml(["call-icon-link", className].filter(Boolean).join(" "))}" href="tel:${escapeHtml(company.phoneHref)}" aria-label="${escapeHtml(`${t("mobile_call")} ${company.phoneDisplay}`)}" data-call-link data-cta-location="${escapeHtml(location)}">
-    <i class="ti ti-phone-call" aria-hidden="true"></i>
-    <span class="sr-only">${escapeHtml(t("mobile_call"))}</span>
-  </a>`;
-
-const getOrganizationSchema = () => ({
+const renderOrganizationSchema = () => ({
   "@context": "https://schema.org",
   "@type": "RealEstateAgent",
   "@id": "https://oaklynrealty.ae/#organization",
@@ -410,1354 +67,734 @@ const getOrganizationSchema = () => ({
   alternateName: company.company,
   url: company.mainWebsite,
   logo: company.logo,
-  image: company.logo,
   telephone: company.phoneHref,
   email: company.email,
   address: {
     "@type": "PostalAddress",
     streetAddress: company.office,
     addressLocality: "Dubai",
-    addressCountry: "AE",
+    addressCountry: "AE"
   },
   identifier: [
     { "@type": "PropertyValue", propertyID: "DED Licence", value: "1589593" },
-    { "@type": "PropertyValue", propertyID: "RERA ORN", value: "59210" },
-  ],
+    { "@type": "PropertyValue", propertyID: "RERA ORN", value: "59210" }
+  ]
 });
 
-const getWebpageSchema = ({ canonical, title, description, hasListing = true }) => ({
+const renderWebpageSchema = (canonical) => ({
   "@context": "https://schema.org",
   "@type": "WebPage",
-  "@id": `${canonical}#webpage`,
   url: canonical,
-  name: title,
-  description,
-  inLanguage: getLocaleLang(),
-  primaryImageOfPage: {
-    "@type": "ImageObject",
-    url: getSeoImageUrl(),
-  },
-  about: hasListing ? { "@id": `${canonical}#listing` } : { "@id": "https://oaklynrealty.ae/#organization" },
-  publisher: { "@id": "https://oaklynrealty.ae/#organization" },
+  name: project.seo.title,
+  description: project.seo.description,
+  inLanguage: "en",
+  publisher: { "@id": "https://oaklynrealty.ae/#organization" }
 });
 
-const getListingSchema = (canonical) => {
-  const listing = project.listing || {};
-  const permit = project.compliance?.permit;
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "RealEstateListing",
-    "@id": `${canonical}#listing`,
-    url: canonical,
-    name: project.name,
-    description: project.seo.description,
-    image: getProjectImageUrls(),
-    brokerage: { "@id": "https://oaklynrealty.ae/#organization" },
-    broker: { "@id": "https://oaklynrealty.ae/#organization" },
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: listing.addressLocality || "Dubai",
-      addressRegion: listing.addressRegion || listing.addressLocality || "Dubai",
-      addressCountry: listing.addressCountry || "AE",
-    },
-    regulator: {
-      "@type": "GovernmentOrganization",
-      name: listing.regulator || "Dubai Land Department",
-    },
-  };
-
-  if (listing.developer) {
-    schema.developer = {
-      "@type": "Organization",
-      name: listing.developer,
-    };
-  }
-
-  if (permit?.value) {
-    schema.identifier = [
-      {
-        "@type": "PropertyValue",
-        propertyID: permit.propertyID || "Advertising Permit",
-        value: permit.value,
-      },
-    ];
-  }
-
-  return schema;
-};
-
-const getBreadcrumbSchema = (canonical) => ({
+const renderListingSchema = (canonical) => ({
   "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  itemListElement: [
-    {
-      "@type": "ListItem",
-      position: 1,
-      name: company.company,
-      item: company.mainWebsite,
-    },
-    {
-      "@type": "ListItem",
-      position: 2,
-      name: project.name,
-      item: canonical,
-    },
-  ],
+  "@type": "RealEstateListing",
+  url: canonical,
+  name: project.name,
+  description: project.seo.description,
+  brokerage: { "@id": "https://oaklynrealty.ae/#organization" },
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: project.listing.addressLocality,
+    addressRegion: project.listing.addressRegion,
+    addressCountry: project.listing.addressCountry
+  },
+  developer: {
+    "@type": "Organization",
+    name: project.listing.developer
+  },
+  regulator: {
+    "@type": "GovernmentOrganization",
+    name: project.listing.regulator
+  }
 });
 
-const getFaqSchema = () => {
-  const questions = (project.faq || []).filter((item) => item.question && item.answer);
-  if (!questions.length) return null;
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "@id": `${project.landingPageUrl}#faq`,
-    mainEntity: questions.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
-  };
-};
-
-const renderOptionalJsonLd = (data) => (data ? renderJsonLd(data) : "");
-
-const renderHead = ({
-  title,
-  description,
-  canonical,
-  noindex = false,
-  includeListingSchema = true,
-  extraHeadBeforeGtm = "",
-}) => `  <meta charset="utf-8">
+const renderHead = ({ canonical, title = project.seo.title, description = project.seo.description }) => `  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  ${noindex ? '<meta name="robots" content="noindex, nofollow">' : ""}
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}">
-  <meta name="author" content="${escapeHtml(company.company)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
-  ${renderSocialMeta({ title, description, canonical })}
-  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
-  ${extraHeadBeforeGtm}
+  <link rel="icon" href="data:,">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="${escapeHtml(title)}">
+  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:image" content="${escapeHtml(absoluteUrl(project.media.hero.src))}">
+  <meta property="og:url" content="${escapeHtml(canonical)}">
+  <meta name="twitter:card" content="summary_large_image">
   ${renderGtmHead(project.tracking, escapeHtml)}
-  ${renderJsonLd(getOrganizationSchema())}
-  ${renderJsonLd(getWebpageSchema({ canonical, title, description, hasListing: includeListingSchema }))}
-  ${includeListingSchema ? renderJsonLd(getListingSchema(canonical)) : ""}
-  ${includeListingSchema ? renderJsonLd(getBreadcrumbSchema(canonical)) : ""}
-  ${includeListingSchema ? renderOptionalJsonLd(getFaqSchema()) : ""}
+  ${renderJsonLd(renderOrganizationSchema())}
+  ${renderJsonLd(renderWebpageSchema(canonical))}
+  ${renderJsonLd(renderListingSchema(canonical))}
+  <link rel="preload" as="image" href="${escapeHtml(withVersion(project.media.hero.src))}">
   <link rel="stylesheet" href="/styles.css?v=${escapeHtml(project.assetVersion)}">`;
 
-const renderNav = () => `
-  <header class="topbar">
-    <div class="shell nav">
-      <a class="brand" href="${escapeHtml(project.homeHref || "/")}" aria-label="${escapeHtml(company.company)} ${escapeHtml(project.name)} ${escapeHtml(t("brand_aria_suffix"))}">
+const renderPicture = ({ image, className = "", loading = "lazy", fetchPriority = "auto", sizes = "100vw" }) => `
+  <picture${className ? ` class="${escapeHtml(className)}"` : ""}>
+    ${image.webp ? `<source srcset="${escapeHtml(withVersion(image.webp))}" type="image/webp" sizes="${escapeHtml(sizes)}">` : ""}
+    ${image.avif ? `<source srcset="${escapeHtml(withVersion(image.avif))}" type="image/avif" sizes="${escapeHtml(sizes)}">` : ""}
+    <img src="${escapeHtml(withVersion(image.src))}" alt="${escapeHtml(image.alt || "")}" loading="${escapeHtml(loading)}" decoding="async"${fetchPriority !== "auto" ? ` fetchpriority="${escapeHtml(fetchPriority)}"` : ""}>
+  </picture>`;
+
+const renderHeader = () => `
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="/" aria-label="${escapeHtml(company.company)} Raw District campaign">
         <img src="${escapeHtml(company.logo)}" alt="${escapeHtml(company.company)}">
-        <span>${escapeHtml(project.name)}</span>
       </a>
-      <nav class="nav-links" aria-label="${escapeHtml(t("primary_nav_aria"))}">
-        <a href="#overview">${escapeHtml(t("nav_overview"))}</a>
-        <a href="#gallery">${escapeHtml(t("nav_gallery"))}</a>
-        <a href="#location">${escapeHtml(t("nav_location"))}</a>
-        <a href="#contact">${escapeHtml(t("nav_contact"))}</a>
-        <a href="${escapeHtml(company.mainWebsite)}">${escapeHtml(t("nav_website"))}</a>
-      </nav>
-      <div class="nav-actions">
-        ${renderCallIconLink({ className: "nav-phone", location: "nav_call" })}
-        <a class="btn btn-primary" href="#contact">${escapeHtml(t("nav_request_details"))}</a>
-      </div>
-      ${project.showMobileMenu === false ? "" : `<button class="mobile-menu-button" type="button" aria-label="${escapeHtml(t("mobile_menu_label"))}" aria-expanded="false" data-mobile-menu-button>${escapeHtml(t("mobile_menu_label"))}</button>`}
+      <a class="advisor-link" href="tel:${escapeHtml(company.phoneHref)}" data-call data-cta-location="header">
+        ${icon("phone")}
+        <span>Call an Advisor</span>
+      </a>
     </div>
-    ${project.showMobileMenu === false ? "" : `<nav class="mobile-menu" aria-label="${escapeHtml(t("mobile_nav_aria"))}" data-mobile-menu>
-      <a href="#overview">${escapeHtml(t("nav_overview"))}</a>
-      <a href="#gallery">${escapeHtml(t("nav_gallery"))}</a>
-      <a href="#location">${escapeHtml(t("nav_location"))}</a>
-      <a href="#contact">${escapeHtml(t("nav_contact"))}</a>
-      <a href="${escapeHtml(company.mainWebsite)}">${escapeHtml(t("nav_website"))}</a>
-    </nav>`}
   </header>`;
 
-const renderFooter = () => `
-  <footer class="section">
-    <div class="shell footer-panel">
-      <div class="footer-grid">
-        <div>
-          <strong>${escapeHtml(project.footer?.company || company.company)}</strong>
-          ${project.footer?.tagline ? `<p class="footer-tagline">${escapeHtml(project.footer.tagline)}</p>` : ""}
-          <p>${renderBrandText(project.footer?.description || t("footer_about_text"))}</p>
-        </div>
-        <div>
-          <strong>${escapeHtml(t("footer_contact_heading"))}</strong>
-          <p>${escapeHtml(project.footer?.address || company.office)}</p>
-          <p>${renderCallIconLink({ className: "footer-call-icon", location: "footer_call" })}<br>${renderWhatsAppLink({ label: company.whatsappDisplay || company.phoneDisplay, location: "footer_contact" })}<br><a href="mailto:${escapeHtml(company.email)}">${escapeHtml(company.email)}</a></p>
-        </div>
-        <div>
-          <strong>${escapeHtml(t("footer_legal_heading"))}</strong>
-          <div class="footer-links">
-            <a href="${escapeHtml(company.aboutUrl)}">${escapeHtml(t("footer_about_link"))}</a>
-            <a href="${escapeHtml(company.contactUrl)}">${escapeHtml(t("footer_contact_link"))}</a>
-            <a href="${escapeHtml(company.privacyUrl)}">${escapeHtml(t("footer_privacy_link"))}</a>
-            <a href="${escapeHtml(company.termsUrl)}">${escapeHtml(t("footer_terms_link"))}</a>
-          </div>
-        </div>
-      </div>
-      <p class="copyright">${escapeHtml(project.footer?.license || t("footer_copyright"))}</p>
-      ${project.footer?.copyright ? `<p class="copyright">${escapeHtml(project.footer.copyright)}</p>` : ""}
-      ${project.footer?.disclaimer ? `<p class="copyright">${escapeHtml(project.footer.disclaimer)}</p>` : ""}
-    </div>
-  </footer>`;
-
-const renderWhatsAppFloat = () => `<div class="whatsapp-float-wrap">
-    ${renderWhatsAppLink({ className: "whatsapp-float", label: t("whatsapp_floating_label"), location: "floating_icon", iconOnly: true })}
-  </div>`;
-
-const renderPermitQrBadge = () => {
-  const isArabic = getLocaleLang() === "ar";
-  const label = isArabic ? "رمز تصريح المشروع" : "Project permit QR";
-  const ariaLabel = isArabic ? "عرض رمز تصريح المشروع" : "View project permit QR code";
-  const image = withAssetVersion("/assets/raw-district/permit-qr.jpeg");
-
-  return `<div class="permit-qr-badge" role="img" aria-label="${escapeHtml(ariaLabel)}" data-permit-qr-badge>
-    <img src="${escapeHtml(image)}" alt="${escapeHtml(label)}" loading="lazy" decoding="async">
-    <span>${escapeHtml(label)}</span>
-  </div>`;
-};
-
-const renderWhatsAppModal = () => `
-  <div class="whatsapp-modal" data-whatsapp-modal hidden aria-hidden="true">
-    <div class="whatsapp-modal-backdrop" data-whatsapp-modal-close></div>
-    <section class="whatsapp-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="whatsappModalTitle">
-      <button class="whatsapp-modal-close" type="button" data-whatsapp-modal-close>${escapeHtml(t("whatsapp_close"))}</button>
-      <span class="eyebrow">${escapeHtml(t("whatsapp_eyebrow"))}</span>
-      <h3 id="whatsappModalTitle">${escapeHtml(t("whatsapp_title"))}</h3>
-      <p class="section-copy">${escapeHtml(t("whatsapp_copy"))}</p>
-      <div class="phone-input-row whatsapp-modal-phone-row">
-        <div class="field">
-          <label id="whatsappModalCountryCodeLabel">${escapeHtml(t("whatsapp_country_code"))}</label>
-          ${renderPhoneCountryPicker({
-            inputId: "whatsappModalCountryCode",
-            inputName: "",
-            pickerKey: "whatsapp",
-            searchId: "whatsapp_modal_country_search",
-            labelledBy: "whatsappModalCountryCodeLabel",
-          })}
-        </div>
-        <div class="field" id="whatsappModalPhoneField">
-          <label for="whatsappModalPhone">${escapeHtml(t("whatsapp_phone"))}</label>
-          <input id="whatsappModalPhone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="${escapeHtml(t("whatsapp_phone_placeholder"))}">
-          <div class="field-error">${escapeHtml(t("whatsapp_phone_error"))}</div>
-        </div>
-      </div>
-      <p class="whatsapp-modal-note">${escapeHtml(t("whatsapp_note"))}</p>
-      <div id="whatsappModalError" class="form-error">${escapeHtml(t("whatsapp_error"))}</div>
-      <div id="whatsappModalBlocked" class="form-success">
-        <h3>${escapeHtml(t("blocked_success_title"))}</h3>
-        <p class="section-copy">${escapeHtml(project.form.blacklistBlockedMessage || "Thank you. Your inquiry has already been received.")}</p>
-      </div>
-      <div class="whatsapp-modal-actions">
-        <button class="btn btn-primary" type="button" id="whatsappModalContinue">${escapeHtml(t("whatsapp_continue"))}</button>
-        <button class="btn btn-ghost" type="button" data-whatsapp-modal-close>${escapeHtml(t("cancel"))}</button>
-      </div>
-    </section>
-  </div>`;
-
-const renderVerificationOverlay = () => `
-  <div id="verify-overlay" style="display:none; position:fixed; inset:0; background:rgba(8,8,8,0.97); z-index:99999; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px;">
-    <img src="${escapeHtml(company.logo)}" alt="Oaklyn Realty" style="height:48px; margin-bottom:40px; opacity:0.9;">
-    <svg id="verify-icon" width="64" height="64" viewBox="0 0 64 64" fill="none" style="margin-bottom:32px;">
-      <circle cx="32" cy="32" r="28" stroke="#C9A84C" stroke-width="2" opacity="0.3"/>
-      <path id="shield-path" d="M32 12 L48 20 L48 34 C48 44 32 52 32 52 C32 52 16 44 16 34 L16 20 Z" stroke="#C9A84C" stroke-width="2" fill="none" stroke-dasharray="120" stroke-dashoffset="120" style="transition: stroke-dashoffset 1s ease;"/>
-      <path id="check-path" d="M22 32 L29 39 L42 26" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="30" stroke-dashoffset="30" style="transition: stroke-dashoffset 0.6s ease 0.8s;"/>
-    </svg>
-    <h2 id="verify-headline" style="font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:700; color:#F5F0E8; margin-bottom:16px; transition:opacity 0.4s;">${escapeHtml(t("verification_headline_1"))}</h2>
-    <div style="width:320px; max-width:100%; height:3px; background:rgba(255,255,255,0.08); border-radius:50px; margin-bottom:16px; overflow:hidden;">
-      <div id="verify-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#C9A84C,#E8C96A); border-radius:50px; transition:width 0.1s linear;"></div>
-    </div>
-    <p id="verify-pct" style="font-family:'Inter',sans-serif; font-size:14px; color:#C9A84C; margin-bottom:12px; font-weight:600;">0%</p>
-    <p id="verify-sub" style="font-family:'Inter',sans-serif; font-size:13px; color:#A8A39D; transition:opacity 0.4s;">${escapeHtml(t("verification_sub_1"))}</p>
-    <div style="display:flex; gap:24px; margin-top:40px; flex-wrap:wrap; justify-content:center;">
-      <span style="font-size:12px; color:#A8A39D; font-family:'Inter',sans-serif;">${escapeHtml(t("verification_trust_1"))}</span>
-      <span style="font-size:12px; color:#A8A39D; font-family:'Inter',sans-serif;">${escapeHtml(t("verification_trust_2"))}</span>
-      <span style="font-size:12px; color:#A8A39D; font-family:'Inter',sans-serif;">${escapeHtml(t("verification_trust_3"))}</span>
-    </div>
-  </div>`;
-
-const renderLanguageChoiceOverlay = () => {
-  const popup = getLanguagePopupConfig();
-  const routes = getLanguageRouteConfig("landing");
-  return `<div class="language-choice-overlay" data-language-choice-overlay aria-modal="true" role="dialog" aria-labelledby="languageChoiceTitle">
-    <div class="language-choice-backdrop" aria-hidden="true"></div>
-    <section class="language-choice-card">
-      <span class="language-choice-badge">${escapeHtml(popup.badge)}</span>
-      <h2 id="languageChoiceTitle">${escapeHtml(popup.title)}</h2>
-      <p>${escapeHtml(popup.subtitle)}</p>
-      <div class="language-choice-actions" id="languageChoiceActions">
-        <a class="language-choice-option" href="${escapeHtml(routes.en)}" data-language-choice="en">${escapeHtml(popup.englishLabel)}</a>
-        <a class="language-choice-option" href="${escapeHtml(routes.ar)}" data-language-choice="ar">${escapeHtml(popup.arabicLabel)}</a>
-      </div>
-      <p class="language-choice-loading" data-language-choice-loading hidden>${escapeHtml(popup.loading)}</p>
-    </section>
-  </div>`;
-};
-
-const renderHighlights = () =>
-  project.highlights
-    .map(
-      (item) => `
-          <article class="highlight-card">
-            <span>${escapeHtml(item.label)}</span>
-            <strong>${escapeHtml(item.value)}</strong>
-          </article>`,
-    )
+const renderChips = () =>
+  project.hero.chips
+    .map((chip) => `<span class="fact-chip">${escapeHtml(chip)}</span>`)
     .join("");
 
-const renderHeroVisual = () => {
-  const slides = project.heroSlides?.length ? project.heroSlides : [{ image: project.hero.background, label: project.hero.title }];
-  if (slides.length === 1) {
-    return `<div class="hero-bg" style="background-image: url('${escapeHtml(withAssetVersion(slides[0].image))}');"></div>`;
-  }
-  return `<div class="hero-slider" data-hero-slider>
-        ${slides
-          .map(
-            (slide, index) =>
-              `<div class="hero-bg hero-slide${index === 0 ? " is-active" : ""}" style="background-image: url('${escapeHtml(withAssetVersion(slide.image))}');" aria-label="${escapeHtml(slide.label)}"></div>`,
-          )
-          .join("\n        ")}
-      </div>`;
-};
-
-const renderGallerySlides = () =>
-  project.gallery.items
-    .map(
-      (item, index) => `
-            <article class="gallery-slide" data-gallery-slide>
-              <div class="gallery-image">
-                <img class="gallery-photo" src="${escapeHtml(withAssetVersion(item.image))}" alt="${escapeHtml(`${item.eyebrow} - ${item.title}`)}" loading="${index === 0 ? "eager" : "lazy"}" decoding="async">
-                <div class="gallery-caption">
-                  <span>${escapeHtml(item.eyebrow)}</span>
-                  <strong>${escapeHtml(item.title)}</strong>
-                </div>
-              </div>
-            </article>`,
-    )
+const renderProofPoints = () =>
+  project.hero.proofPoints
+    .map((point) => `<li>${icon("check")}<span>${escapeHtml(point)}</span></li>`)
     .join("");
 
-const renderGalleryDots = () =>
-  project.gallery.items
-    .map(
-      (_, index) => `
-          <button class="gallery-dot${index === 0 ? " is-active" : ""}" type="button" aria-label="${escapeHtml(t("gallery_dot_aria").replace("{index}", formatLocalizedNumber(index + 1)))}" aria-pressed="${index === 0 ? "true" : "false"}" data-gallery-dot></button>`,
-    )
-    .join("");
+const renderCountryCodePicker = (formId) => {
+  const countries = project.form.phoneCountries || [];
+  const defaultCountry = countries[0] || { label: "United Arab Emirates", dialCode: "+971" };
+  const currentId = `${formId}_phone_country_current`;
 
-const renderSnapshotItems = () =>
-  project.snapshot.items
-    .map(
-      (item) => `
-          <article class="why-card">
-            <strong>${escapeHtml(item.title)}</strong>
-            <p>${escapeHtml(item.text)}</p>
-          </article>`,
-    )
-    .join("");
-
-const renderLocationBullets = () =>
-  project.location.bullets
-    .map((item) => `<li>${escapeHtml(item)}</li>`)
-    .join("");
-
-const renderComplianceCards = () =>
-  project.trustPoints
-    .map(
-      (item) => `
-          <article class="compliance-card">
-            <strong>${renderBrandText(item.title)}</strong>
-            <p>${renderBrandText(item.text)}</p>
-          </article>`,
-    )
-    .join("");
-
-const renderPermitNote = () => {
-  const permit = project.compliance?.permit;
-  if (!permit?.value) return "";
-  return `<p class="permit-note">${escapeHtml(permit.label || "Permit No.")} ${escapeHtml(permit.value)} — ${escapeHtml(permit.authority || "Issued by the relevant regulator")}</p>`;
-};
-
-const renderFaq = () => {
-  if (!project.faq?.length) return "";
-  return `<section class="section faq-section">
-      <div class="shell">
-        <div class="section-kicker">
-          <span class="eyebrow">${escapeHtml(t("faq_eyebrow"))}</span>
-          <h2 class="section-title">${escapeHtml(t("faq_title"))}</h2>
-        </div>
-        <div class="faq-grid">
-          ${project.faq
-            .map(
-              (item) => `<article class="faq-card">
-            <strong>${escapeHtml(item.question)}</strong>
-            <p>${escapeHtml(item.answer)}</p>
-          </article>`,
-            )
-            .join("")}
-        </div>
-      </div>
-    </section>`;
-};
-
-const renderOptions = (items) =>
-  items.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("");
-
-const getDefaultPhoneCountry = () =>
-  project.form.phoneCountries?.[0] || { flag: "🇦🇪", label: "United Arab Emirates", dialCode: "+971" };
-
-const renderPhoneCountryPicker = ({
-  inputId = "landing_phone_country",
-  inputName = "phone_country_code",
-  pickerKey = "lead",
-  searchId = "landing_phone_country_search",
-  labelledBy = "",
-  includeOptions = true,
-} = {}) => {
-  const defaultCountry = getDefaultPhoneCountry();
-  const inputNameAttribute = inputName ? ` name="${escapeHtml(inputName)}"` : "";
-  const labelledByAttribute = labelledBy ? ` aria-labelledby="${escapeHtml(labelledBy)}"` : "";
-
-  return `<div class="country-picker is-placeholder" data-country-picker="${escapeHtml(pickerKey)}">
-      <input id="${escapeHtml(inputId)}"${inputNameAttribute} type="hidden" value="" data-country-picker-input>
-      <button
-        class="country-picker-trigger"
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded="false"
-        ${labelledByAttribute}
-        data-country-picker-trigger
-      >
-        <span class="country-picker-current">
-          <span class="country-picker-flag" data-country-picker-flag></span>
-          <span class="country-picker-label" data-country-picker-label>Country code</span>
-          <span class="country-picker-code" data-country-picker-code>${escapeHtml(defaultCountry.dialCode)}</span>
-        </span>
-        <span class="country-picker-chevron" aria-hidden="true">▾</span>
-      </button>
-      <div class="country-picker-panel" data-country-picker-panel hidden>
-        <label class="sr-only" for="${escapeHtml(searchId)}">${escapeHtml(t("phone_search_sr_label"))}</label>
-        <input
-          id="${escapeHtml(searchId)}"
-          class="country-picker-search"
-          type="search"
-          autocomplete="off"
-          autocapitalize="none"
-          spellcheck="false"
-          enterkeyhint="search"
-          placeholder="${escapeHtml(t("phone_search_placeholder"))}"
-          data-country-picker-search
-        >
-        <div class="country-picker-list" role="listbox" data-country-picker-list>
-          ${includeOptions ? project.form.phoneCountries
-            .map(
-              (item, index) => `<button
-              class="country-picker-option"
+  return `<div class="field country-field country-code-field" data-field="phone_country_code" data-country-code-picker>
+            <label id="${escapeHtml(formId)}_phone_country_label">Country code</label>
+            <input id="${escapeHtml(formId)}_phone_country" name="phone_country_code" type="hidden" value="${escapeHtml(defaultCountry.dialCode)}" autocomplete="tel-country-code" data-country-code-input>
+            <button
+              class="country-code-trigger"
               type="button"
-              role="option"
-              aria-selected="false"
-              data-country-option
-              data-country-flag="${escapeHtml(item.flag)}"
-              data-country-label="${escapeHtml(item.label)}"
-              data-country-code="${escapeHtml(item.dialCode)}"
-              data-country-query="${escapeHtml(`${item.label} ${item.dialCode}`.toLowerCase())}"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-labelledby="${escapeHtml(formId)}_phone_country_label ${escapeHtml(currentId)}"
+              data-country-code-trigger
             >
-              <span class="country-picker-option-flag">${escapeHtml(item.flag)}</span>
-              <span class="country-picker-option-label">${escapeHtml(item.label)}</span>
-              <span class="country-picker-option-code">${escapeHtml(item.dialCode)}</span>
-            </button>`,
-            )
-            .join("") : ""}
-        </div>
-        <p class="country-picker-empty" data-country-picker-empty hidden>${escapeHtml(t("phone_search_empty"))}</p>
-      </div>
-    </div>`;
-};
-
-const getFormLabels = () => ({
-  name: "Full Name",
-  firstName: "First Name",
-  lastName: "Last Name",
-  phone: "Phone",
-  email: "Email",
-  message: "Inquiry",
-  project: "Preferred Project",
-  propertyType: "Property Type",
-  ...(project.form.labels || {}),
-});
-
-const renderNameFields = (formLabels) => {
-  if (!project.form.splitName) {
-    return `<div class="field" id="nameField">
-                <label for="landing_full_name">${escapeHtml(formLabels.name)}</label>
-                <input id="landing_full_name" name="full_name" type="text" autocomplete="name" required>
-                <div class="field-error">${escapeHtml(t("validation_name"))}</div>
-              </div>`;
-  }
-
-  return `<div class="field" id="firstNameField">
-                <label for="landing_first_name">${escapeHtml(formLabels.firstName)}</label>
-                <input id="landing_first_name" name="first_name" type="text" autocomplete="given-name" required>
-                <div class="field-error">${escapeHtml(t("validation_first_name"))}</div>
+              <span id="${escapeHtml(currentId)}" data-country-code-current>${escapeHtml(`${defaultCountry.label} ${defaultCountry.dialCode}`)}</span>
+              <span class="country-code-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div class="country-code-panel" data-country-code-panel hidden>
+              <label class="sr-only" for="${escapeHtml(formId)}_phone_country_search">Search country or code</label>
+              <input
+                id="${escapeHtml(formId)}_phone_country_search"
+                class="country-code-search"
+                type="search"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false"
+                placeholder="Search country or code"
+                data-country-code-search
+              >
+              <div class="country-code-list" role="listbox" data-country-code-list>
+                ${countries
+                  .map(
+                    (country, index) => `<button
+                  class="country-code-option${index === 0 ? " is-selected" : ""}"
+                  type="button"
+                  role="option"
+                  aria-selected="${index === 0 ? "true" : "false"}"
+                  data-country-code-option
+                  data-country-label="${escapeHtml(country.label)}"
+                  data-country-code="${escapeHtml(country.dialCode)}"
+                  data-country-query="${escapeHtml(`${country.label} ${country.dialCode}`.toLowerCase())}"
+                >
+                  <span class="country-option-check" aria-hidden="true"></span>
+                  <span>${escapeHtml(country.label)}</span>
+                  <strong>${escapeHtml(country.dialCode)}</strong>
+                </button>`,
+                  )
+                  .join("")}
               </div>
-              <div class="field" id="lastNameField">
-                <label for="landing_last_name">${escapeHtml(formLabels.lastName)}</label>
-                <input id="landing_last_name" name="last_name" type="text" autocomplete="family-name" required>
-                <div class="field-error">${escapeHtml(t("validation_last_name"))}</div>
-              </div>`;
+              <p class="country-code-empty" data-country-code-empty hidden>No country found.</p>
+            </div>
+          </div>`;
 };
 
-const renderAbout = () => {
-  if (!project.about) return "";
-  return `<section class="section about-community">
-      <div class="shell about-panel">
-        <span class="eyebrow">${escapeHtml(project.about.eyebrow)}</span>
-        <h2 class="section-title">${escapeHtml(project.about.title)}</h2>
-        <p class="section-copy">${renderBrandText(project.about.text)}</p>
-      </div>
-    </section>`;
-};
+const trackingFieldNames = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+  "gclid",
+  "gbraid",
+  "wbraid",
+  "fbclid",
+  "landing_page_variant",
+  "timestamp",
+  "lead_id",
+  "source_page",
+  "project_slug",
+  "crm_lead_stage",
+  "qualified_lead_status",
+  "converted_lead_status"
+];
 
-const renderUnitCardsSection = () => {
-  if (!project.unitCardsSection?.items?.length) return "";
-  const labels = {
-    size: project.unitCardsSection.labels?.size || "Size",
-    price: project.unitCardsSection.labels?.price || "Price",
-    pricePerSqft: project.unitCardsSection.labels?.pricePerSqft || "Price / Sqft"
-  };
-  return `<section class="section unit-cards-section">
-      <div class="shell">
-        <div class="section-kicker">
-          <span class="eyebrow">${escapeHtml(project.unitCardsSection.eyebrow)}</span>
-          <h2 class="section-title">${escapeHtml(project.unitCardsSection.title)}</h2>
-        </div>
-        <div class="unit-cards-grid">
-          ${project.unitCardsSection.items
-            .map(
-              (item) => `<article class="unit-card">
-                <strong class="unit-card-title">${escapeHtml(item.title)}</strong>
-                <div class="unit-card-rows">
-                  <div class="unit-card-row">
-                    <span class="unit-card-label">${escapeHtml(labels.size)}</span>
-                    <span class="unit-card-value">${escapeHtml(item.size)}</span>
-                  </div>
-                  <div class="unit-card-row unit-card-row--price">
-                    <span class="unit-card-label">${escapeHtml(labels.price)}</span>
-                    <span class="unit-card-value">${escapeHtml(item.price)}</span>
-                  </div>
-                  <div class="unit-card-row unit-card-row--accent">
-                    <span class="unit-card-label">${escapeHtml(labels.pricePerSqft)}</span>
-                    <span class="unit-card-value">${escapeHtml(item.pricePerSqft)}</span>
-                  </div>
-                </div>
-              </article>`,
-            )
-            .join("")}
-        </div>
-        ${project.unitCardsSection.note ? `<p class="unit-cards-note">${escapeHtml(project.unitCardsSection.note)}</p>` : ""}
-      </div>
-    </section>`;
-};
+const renderHiddenFields = (formVariant) =>
+  trackingFieldNames
+    .map((name) => {
+      const value =
+        name === "source_page"
+          ? project.sourcePage
+          : name === "project_slug"
+            ? project.slug
+            : name === "crm_lead_stage"
+              ? "new_campaign_lead"
+              : name === "qualified_lead_status" || name === "converted_lead_status"
+                ? "pending_crm_update"
+            : name === "landing_page_variant"
+              ? formVariant
+              : "";
+      return `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}" data-hidden-field="${escapeHtml(name)}">`;
+    })
+    .join("\n        ");
 
-const renderAboutUsSection = () => {
-  if (!project.aboutUsSection) return "";
-  return `<section class="section about-us-section">
-      <div class="shell about-panel about-us-panel">
-        <span class="eyebrow">${escapeHtml(project.aboutUsSection.eyebrow)}</span>
-        <h2 class="section-title">${renderBrandText(project.aboutUsSection.title)}</h2>
-        <p class="section-copy">${renderBrandText(project.aboutUsSection.text)}</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="${escapeHtml(project.aboutUsSection.href)}" target="_blank" rel="noopener">${renderBrandText(project.aboutUsSection.ctaLabel)}</a>
-        </div>
-      </div>
-    </section>`;
-};
-
-const isHttpUrl = (value = "") => /^https?:\/\//i.test(String(value));
-const isWhatsAppUrl = (value = "") => /wa\.me|whatsapp/i.test(String(value));
-const isTelUrl = (value = "") => /^tel:/i.test(String(value));
-const isMapUrl = (value = "") => /maps\.app|google\.[^/]+\/maps/i.test(String(value));
-
-const getFaviconUrl = (href = "") => {
-  if (!isHttpUrl(href)) return "";
-  return `https://www.google.com/s2/favicons?sz=128&domain_url=${encodeURIComponent(href)}`;
-};
-
-const getLinkHubActionLabel = (item) => {
-  if (!item.href) return "URL Pending";
-  if (item.actionLabel) return item.actionLabel;
-  if (isTelUrl(item.href)) return "Call";
-  if (isWhatsAppUrl(item.href)) return "Chat";
-  if (isMapUrl(item.href)) return "Directions";
-  return "Visit";
-};
-
-const renderLinkHubCardMedia = (item = {}) => {
-  if (item.image) {
-    return `<span class="link-hub-card-media is-image" aria-hidden="true"><img src="${escapeHtml(item.image)}" alt=""></span>`;
-  }
-
-  if (item.logo) {
-    return `<span class="link-hub-card-media is-logo" aria-hidden="true"><img src="${escapeHtml(item.logo)}" alt=""></span>`;
-  }
-
-  if (item.avatarText) {
-    return `<span class="link-hub-card-media is-avatar" aria-hidden="true">${escapeHtml(item.avatarText)}</span>`;
-  }
-
-  if (item.href && isHttpUrl(item.href) && !isMapUrl(item.href) && !isWhatsAppUrl(item.href)) {
-    return `<span class="link-hub-card-media is-favicon" aria-hidden="true"><img src="${escapeHtml(getFaviconUrl(item.href))}" alt=""></span>`;
-  }
-
-  const iconClass = item.icon || "bx bx-link";
-  return `<span class="link-hub-card-media is-icon" aria-hidden="true"><i class="${escapeHtml(iconClass)}"></i></span>`;
-};
-
-const renderLinkHubCards = (items = [], section = {}) =>
+const renderOptionCards = ({ name, items, formId }) =>
   items
-    .map((item) => {
-      const actionLabel = getLinkHubActionLabel(item);
-      const classes = [
-        "link-hub-card",
-        item.href ? "" : "is-placeholder",
-        item.image ? "has-image" : "",
-        item.logo ? "has-logo" : "",
-        item.avatarText ? "has-avatar" : "",
-        section.title === "Contacts" ? "is-contact" : "",
-      ]
-        .filter(Boolean)
-        .join(" ");
-      const cardInner = `
-        ${renderLinkHubCardMedia(item)}
-        <span class="link-hub-card-copy">
-          <strong>${escapeHtml(item.label)}</strong>
-          <small>${escapeHtml(item.description || "Add final destination URL")}</small>
-        </span>
-        <span class="link-hub-card-badge${item.href ? "" : " is-pending"}">${escapeHtml(actionLabel)}</span>
-        <span class="link-hub-card-arrow" aria-hidden="true">${item.href ? "↗" : "…"}</span>`;
-
-      if (item.href) {
-        const externalAttrs = isHttpUrl(item.href) ? ' target="_blank" rel="noopener"' : "";
-        return `<a class="${classes}" href="${escapeHtml(item.href)}"${externalAttrs}>${cardInner}</a>`;
-      }
-
-      return `<article class="${classes}">${cardInner}</article>`;
+    .map((item, index) => {
+      const id = `${formId}_${name}_${index}`;
+      return `<label class="choice-card" for="${escapeHtml(id)}">
+        <input id="${escapeHtml(id)}" type="radio" name="${escapeHtml(name)}" value="${escapeHtml(item)}">
+        <span>${escapeHtml(item)}</span>
+      </label>`;
     })
     .join("");
 
-const renderLinkHubJumpNav = (sections = []) =>
-  `<nav class="link-hub-jump-nav" aria-label="Quick links">
-    ${sections
-      .map(
-        (section) => `<a class="link-hub-jump-chip" href="#${escapeHtml(slugify(section.title))}">${escapeHtml(section.title)}</a>`,
-      )
-      .join("")}
-  </nav>`;
+const renderMultiStepForm = ({ formId = "campaignLeadForm", variant = "a", compact = false } = {}) => `
+  <section class="form-card${compact ? " form-card-compact" : ""}" aria-labelledby="${escapeHtml(formId)}Title">
+    <div class="form-card-header">
+      <span class="form-kicker">Step <span data-current-step>1</span> of 3</span>
+      <h2 id="${escapeHtml(formId)}Title">Get the official price list, floor plans and current availability</h2>
+      <p>Answer a few short questions so we can send the most relevant Raw District options.</p>
+    </div>
+    <form id="${escapeHtml(formId)}" class="lead-form" novalidate data-lead-form data-form-type="multi-step" data-form-variant="${escapeHtml(variant)}">
+      ${renderHiddenFields(variant)}
+      <input id="${escapeHtml(formId)}_website" class="hp-field" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
 
-const renderLinkHubSections = () =>
-  (project.linkHub?.sections || [])
-    .map(
-      (section) => `
-        <section class="link-hub-group link-hub-group--${escapeHtml(section.layout || "compact")}" id="${escapeHtml(slugify(section.title))}">
-          <div class="link-hub-group-panel">
-            <div class="link-hub-group-header">
-              <span class="link-hub-group-title">${escapeHtml(section.title)}</span>
-              <span class="link-hub-group-count">${section.items.length} link${section.items.length === 1 ? "" : "s"}</span>
-            </div>
-            <div class="link-hub-card-stack">
-              ${renderLinkHubCards(section.items, section)}
-            </div>
-          </div>
-        </section>`,
-    )
-    .join("");
+      <div class="progress-track" aria-hidden="true">
+        <span class="is-active" data-progress-step="1"></span>
+        <span data-progress-step="2"></span>
+        <span data-progress-step="3"></span>
+      </div>
 
-const renderLinkHubPage = (nextProject) => {
-  setProject(nextProject);
-  const linkHub = project.linkHub;
-  if (!linkHub) return "";
-  const lang = getLocaleLang();
-  const dir = getLocaleDir();
-  const bodyClass = getBodyClass("link-hub-page");
+      <fieldset class="form-step is-active" data-step-panel="1">
+        <legend>What type of property are you looking for?</legend>
+        <div class="choice-grid">
+          ${renderOptionCards({ name: "property_preference", items: project.form.propertyOptions, formId })}
+        </div>
+        <p class="field-error" data-step-error="1">Please choose a property type to continue.</p>
+        <button class="btn btn-primary btn-full" type="button" data-next-step>${escapeHtml(project.cta)}</button>
+        <p class="cta-microcopy">${escapeHtml(project.microcopy)}</p>
+      </fieldset>
 
-  return `<!doctype html>
-<html lang="${escapeHtml(lang)}" dir="${escapeHtml(dir)}">
-<head>
-${renderHead({
-  title: linkHub.seo.title,
-  description: linkHub.seo.description,
-  canonical: linkHub.landingPageUrl,
-  noindex: true,
-  includeListingSchema: false,
-})}
-</head>
-<body${bodyClass ? ` class="${escapeHtml(bodyClass)}"` : ""}>
-${renderGtmBody(project.tracking, escapeHtml)}
-  <main class="link-hub">
-    <div class="link-hub-shell">
-      <section class="link-hub-profile">
-        <div class="link-hub-profile-panel">
-          <div class="link-hub-profile-cover"${linkHub.profile.coverImage ? ` style="background-image: url('${escapeHtml(linkHub.profile.coverImage)}')"` : ""}></div>
-          <div class="link-hub-profile-overlay"></div>
-          <div class="link-hub-profile-body">
-            <div class="link-hub-mark" aria-hidden="true">${linkHub.profile.logo ? `<img src="${escapeHtml(linkHub.profile.logo)}" alt="">` : "OR"}</div>
-            <span class="eyebrow">${escapeHtml(linkHub.profile.eyebrow)}</span>
-            <div class="link-hub-handle">${escapeHtml(linkHub.profile.handle)}</div>
-            <h1>${escapeHtml(linkHub.profile.title)}</h1>
-            <p class="link-hub-subtitle">${escapeHtml(linkHub.profile.subtitle)}</p>
-            <p class="link-hub-note">${escapeHtml(linkHub.profile.note)}</p>
-            ${renderLinkHubJumpNav(linkHub.sections)}
+      <fieldset class="form-step" data-step-panel="2" hidden>
+        <legend>When are you planning to purchase?</legend>
+        <div class="choice-grid">
+          ${renderOptionCards({ name: "purchase_timeframe", items: project.form.timeframeOptions, formId })}
+        </div>
+        <p class="field-error" data-step-error="2">Please choose a timeframe to continue.</p>
+        <div class="form-actions">
+          <button class="btn btn-secondary" type="button" data-prev-step>Back</button>
+          <button class="btn btn-primary" type="button" data-next-step>${escapeHtml(project.cta)}</button>
+        </div>
+        <p class="cta-microcopy">${escapeHtml(project.microcopy)}</p>
+      </fieldset>
+
+      <fieldset class="form-step" data-step-panel="3" hidden>
+        <legend>Where should we send the details?</legend>
+        <div class="field" data-field="full_name">
+          <label for="${escapeHtml(formId)}_full_name">Full name</label>
+          <input id="${escapeHtml(formId)}_full_name" name="full_name" type="text" autocomplete="name" required>
+          <p class="field-error">Please enter your full name.</p>
+        </div>
+        <div class="phone-row">
+          ${renderCountryCodePicker(formId)}
+          <div class="field" data-field="phone">
+            <label for="${escapeHtml(formId)}_phone">Mobile or WhatsApp number</label>
+            <input id="${escapeHtml(formId)}_phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" required>
+            <p class="field-error">Please enter a valid mobile number.</p>
           </div>
         </div>
-      </section>
-      <div class="link-hub-stack">
-        ${renderLinkHubSections()}
+        <div class="field" data-field="email">
+          <label for="${escapeHtml(formId)}_email">Email address</label>
+          <input id="${escapeHtml(formId)}_email" name="email" type="email" inputmode="email" autocomplete="email" required>
+          <p class="field-error">Please enter a valid email address.</p>
+        </div>
+        <div class="field" data-field="contact_method">
+          <label for="${escapeHtml(formId)}_contact_method">Preferred contact method</label>
+          <select id="${escapeHtml(formId)}_contact_method" name="contact_method" required>
+            ${project.form.contactMethods.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("")}
+          </select>
+          <p class="field-error">Please choose a contact method.</p>
+        </div>
+        <label class="consent-row" data-field="consent">
+          <input type="checkbox" name="consent" value="yes" required>
+          <span>${escapeHtml(project.form.consent)} <a href="${escapeHtml(company.privacyUrl)}" target="_blank" rel="noopener">Privacy Policy</a></span>
+        </label>
+        <p class="field-error consent-error">Please confirm consent so we can respond to your inquiry.</p>
+        <div class="form-actions">
+          <button class="btn btn-secondary" type="button" data-prev-step>Back</button>
+          <button class="btn btn-primary" type="submit">${escapeHtml(project.cta)}</button>
+        </div>
+        <p class="cta-microcopy">${escapeHtml(project.microcopy)}</p>
+      </fieldset>
+
+      <p class="form-status" data-form-status role="alert"></p>
+    </form>
+    ${renderSuccessState()}
+  </section>`;
+
+const renderShortForm = () => `
+  <section class="form-card form-card-compact" aria-labelledby="shortLeadFormTitle">
+    <div class="form-card-header">
+      <span class="form-kicker">A/B short form</span>
+      <h2 id="shortLeadFormTitle">Get Raw District prices and availability</h2>
+      <p>Share the basics and an advisor will send the relevant options.</p>
+    </div>
+    <form id="shortLeadForm" class="lead-form short-form" novalidate data-lead-form data-form-type="short" data-form-variant="b">
+      ${renderHiddenFields("b")}
+      <input id="shortLeadForm_website" class="hp-field" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="field" data-field="full_name">
+        <label for="shortLeadForm_full_name">Full name</label>
+        <input id="shortLeadForm_full_name" name="full_name" type="text" autocomplete="name" required>
+        <p class="field-error">Please enter your full name.</p>
+      </div>
+      <div class="phone-row">
+        ${renderCountryCodePicker("shortLeadForm")}
+        <div class="field" data-field="phone">
+          <label for="shortLeadForm_phone">Mobile or WhatsApp number</label>
+          <input id="shortLeadForm_phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" required>
+          <p class="field-error">Please enter a valid mobile number.</p>
+        </div>
+      </div>
+      <div class="field" data-field="email">
+        <label for="shortLeadForm_email">Email address</label>
+        <input id="shortLeadForm_email" name="email" type="email" inputmode="email" autocomplete="email" required>
+        <p class="field-error">Please enter a valid email address.</p>
+      </div>
+      <div class="field" data-field="property_preference">
+        <label for="shortLeadForm_property">Property preference</label>
+        <select id="shortLeadForm_property" name="property_preference" required>
+          <option value="">Select preference</option>
+          ${project.form.shortPropertyOptions.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("")}
+        </select>
+        <p class="field-error">Please choose a property preference.</p>
+      </div>
+      <label class="consent-row" data-field="consent">
+        <input type="checkbox" name="consent" value="yes" required>
+        <span>${escapeHtml(project.form.consent)} <a href="${escapeHtml(company.privacyUrl)}" target="_blank" rel="noopener">Privacy Policy</a></span>
+      </label>
+      <p class="field-error consent-error">Please confirm consent so we can respond to your inquiry.</p>
+      <button class="btn btn-primary btn-full" type="submit">${escapeHtml(project.cta)}</button>
+      <p class="cta-microcopy">${escapeHtml(project.microcopy)}</p>
+      <p class="form-status" data-form-status role="alert"></p>
+    </form>
+    ${renderSuccessState()}
+  </section>`;
+
+const renderSuccessState = () => `
+  <div class="success-state" data-success-state hidden>
+    <span class="success-icon">${icon("check")}</span>
+    <h2>Your Request Has Been Received</h2>
+    <p>We will send the relevant prices and availability using your preferred contact method.</p>
+    <dl class="summary-list" data-success-summary></dl>
+    <div class="next-steps">
+      <a class="btn btn-secondary" href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Raw%20District%20Viewing&details=Discuss%20Raw%20District%20prices%2C%20floor%20plans%20and%20availability" target="_blank" rel="noopener" data-book-viewing>${icon("calendar")} Add viewing to calendar</a>
+      <a class="btn btn-secondary" href="${escapeHtml(getWhatsAppHref())}" target="_blank" rel="noopener" data-whatsapp data-cta-location="thank_you">${icon("whatsapp")} Start WhatsApp conversation</a>
+      <a class="btn btn-secondary" href="tel:${escapeHtml(company.phoneHref)}" data-call data-cta-location="thank_you">${icon("phone")} Call the property advisor</a>
+    </div>
+  </div>`;
+
+const renderHeroA = () => `
+  <section class="hero hero-a" aria-labelledby="heroTitleA">
+    <div class="shell hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">${escapeHtml(project.hero.eyebrow)}</p>
+        <h1 id="heroTitleA">${escapeHtml(project.hero.title)}</h1>
+        <p class="hero-subtitle">${escapeHtml(project.hero.subtitle)}</p>
+        <div class="chip-row">${renderChips()}</div>
+        <ul class="proof-list">${renderProofPoints()}</ul>
+        <div class="desktop-only cta-row">
+          <a class="text-link" href="tel:${escapeHtml(company.phoneHref)}" data-call data-cta-location="hero_a_secondary">${icon("phone")} Call an Advisor</a>
+          <a class="text-link" href="${escapeHtml(getWhatsAppHref())}" target="_blank" rel="noopener" data-whatsapp data-cta-location="hero_a_secondary">${icon("whatsapp")} WhatsApp</a>
+        </div>
+      </div>
+      <div class="hero-form-wrap">
+        ${renderMultiStepForm({ formId: "campaignLeadForm", variant: "a" })}
+      </div>
+      <figure class="hero-media">
+        ${renderPicture({ image: project.media.hero, className: "image-frame", loading: "eager", fetchPriority: "high", sizes: "(max-width: 700px) 100vw, 48vw" })}
+        <figcaption>Raw District by IMTIAZ, Downtown Jebel Ali</figcaption>
+      </figure>
+    </div>
+  </section>`;
+
+const renderHeroB = () => `
+  <section class="hero hero-b" aria-labelledby="heroTitleB">
+    <div class="shell hero-grid hero-grid-alt">
+      <div class="hero-copy">
+        <p class="eyebrow">${escapeHtml(project.hero.eyebrow)}</p>
+        <h1 id="heroTitleB">${escapeHtml(project.hero.title)}</h1>
+        <p class="hero-subtitle">${escapeHtml(project.hero.subtitle)}</p>
+        <div class="chip-row">${renderChips()}</div>
+        <ul class="proof-list">${renderProofPoints()}</ul>
+        <button class="btn btn-primary btn-large" type="button" data-open-lead-modal>${escapeHtml(project.cta)}</button>
+        <p class="cta-microcopy">${escapeHtml(project.microcopy)}</p>
+      </div>
+      <figure class="hero-media hero-media-alt">
+        ${renderPicture({ image: project.media.heroAlt, className: "image-frame", loading: "eager", fetchPriority: "high", sizes: "(max-width: 700px) 100vw, 52vw" })}
+        <figcaption>Furnished residence preview</figcaption>
+      </figure>
+    </div>
+  </section>`;
+
+const renderTrustStrip = () => `
+  <section class="trust-strip" aria-label="Campaign trust information">
+    <div class="shell trust-grid">
+      ${project.trustStrip
+        .map(
+          (item) => `<div>
+        <span>${escapeHtml(item.label)}</span>
+        <strong>${escapeHtml(item.value)}</strong>
+      </div>`,
+        )
+        .join("")}
+    </div>
+  </section>`;
+
+const renderBenefits = () => `
+  <section class="section benefits-section">
+    <div class="shell">
+      <div class="section-heading">
+        <p class="eyebrow">Key property benefits</p>
+        <h2>Useful project facts before you speak with an advisor</h2>
+      </div>
+      <div class="benefit-grid">
+        ${project.benefits
+          .map(
+            (item) => `<article class="benefit-card">
+          <span class="card-icon">${icon(item.icon)}</span>
+          <h3>${escapeHtml(item.title)}</h3>
+          <p>${escapeHtml(item.text)}</p>
+        </article>`,
+          )
+          .join("")}
       </div>
     </div>
-  </main>
-</body>
-</html>`;
-};
+  </section>`;
 
-const renderLeadFormPanel = (formLabels, options = {}) => {
-  const panelClass = ["form-panel", "lead-strip-panel", options.panelClassName].filter(Boolean).join(" ");
-  const headingClass = ["lead-strip-heading", options.headingClassName].filter(Boolean).join(" ");
-  const formClass = options.formClassName || "";
-  const panelId = options.id ? ` id="${escapeHtml(options.id)}"` : "";
-
-  return `
-        <div class="${escapeHtml(panelClass)}"${panelId} aria-label="${escapeHtml(project.form.title)}">
-          <div class="${escapeHtml(headingClass)}">
+const renderGallery = () => `
+  <section class="section gallery-section" id="gallery">
+    <div class="shell">
+      <div class="section-heading section-heading-row">
+        <div>
+          <p class="eyebrow">Visual property proof</p>
+          <h2>Project visuals without a heavy carousel</h2>
+        </div>
+        <button class="btn btn-secondary" type="button" data-open-gallery>View gallery</button>
+      </div>
+      <div class="gallery-grid">
+        ${project.media.gallery
+          .map(
+            (item, index) => `<figure class="gallery-card${index === 0 ? " gallery-card-large" : ""}">
+          ${renderPicture({ image: item, className: "gallery-picture", sizes: index === 0 ? "(max-width: 700px) 100vw, 48vw" : "(max-width: 700px) 50vw, 24vw" })}
+          <figcaption>${escapeHtml(item.caption)}</figcaption>
+        </figure>`,
+          )
+          .join("")}
+        <figure class="gallery-card gallery-card-plan">
+          <div class="request-info-card">
             <div>
-              <span class="eyebrow">${escapeHtml(t("request_information_eyebrow"))}</span>
-              <h2 class="section-title">${escapeHtml(project.form.title)}</h2>
+              <span>${escapeHtml(project.media.floorPlanRequest.title)}</span>
+              <small>${escapeHtml(project.media.floorPlanRequest.text)}</small>
             </div>
-            <p class="section-copy">${renderBrandText(project.form.text)}</p>
+            <button class="btn btn-primary btn-floor-plan" type="button" data-open-lead-modal>${escapeHtml(project.cta)}</button>
           </div>
-          <form id="landingLeadForm"${formClass ? ` class="${escapeHtml(formClass)}"` : ""} novalidate>
-            <div class="field-grid">
-              ${renderNameFields(formLabels)}
-              <div class="field is-phone" id="phoneField">
-                <label for="landing_phone">${escapeHtml(formLabels.phone)}</label>
-                <div class="phone-input-row">
-                  ${renderPhoneCountryPicker()}
-                  <input id="landing_phone" name="phone" type="tel" inputmode="tel" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="20" placeholder="${escapeHtml(t("form_phone_placeholder"))}" required>
-                </div>
-                <div class="field-error">${escapeHtml(t("form_phone_error"))}</div>
-              </div>
-              <div class="field" id="emailField">
-                <label for="landing_email">${escapeHtml(formLabels.email)}</label>
-                <input id="landing_email" name="email" type="email" autocomplete="email" placeholder="email@example.com" required>
-                <div class="field-error">${escapeHtml(t("form_email_error"))}</div>
-              </div>
-              <div class="field is-message" id="messageField">
-                <label for="landing_message">${escapeHtml(formLabels.message)}</label>
-                <textarea id="landing_message" name="message" rows="3" maxlength="600" placeholder="${escapeHtml(t("form_message_placeholder"))}" required></textarea>
-                <div class="field-error">${escapeHtml(t("form_message_error"))}</div>
-              </div>
-              <div class="field payload-hidden" id="projectField" hidden>
-                <label for="landing_preferred_project">${escapeHtml(formLabels.project)}</label>
-                <input id="landing_preferred_project" name="preferred_project" type="hidden" value="${escapeHtml(project.form.defaultPreferredProject || project.form.preferredProjects?.[0] || project.name)}">
-              </div>
-              <div class="field payload-hidden" id="propertyTypeField" hidden>
-                <label for="landing_property_type">${escapeHtml(formLabels.propertyType)}</label>
-                <input id="landing_property_type" name="property_type" type="hidden" value="${escapeHtml(project.form.defaultPropertyType || project.form.propertyTypes?.[0] || "Apartment")}">
-              </div>
-            </div>
-            <input id="landing_gclid" name="gclid" type="hidden">
-            <input id="landing_gbraid" name="gbraid" type="hidden">
-            <input id="landing_wbraid" name="wbraid" type="hidden">
-            <input id="landing_lead_id" name="lead_id" type="hidden">
-            <input id="landing_website" class="hidden-field" name="landing_website" type="text" tabindex="-1" autocomplete="off">
-            <div class="btn-outer lead-strip-submit">
-              <div class="btn-glow-ring"></div>
-              <div class="btn-border-ring"></div>
-              <button id="landingSubmitBtn" class="btn btn-primary" type="submit">${escapeHtml(t("form_submit"))}</button>
-            </div>
-            ${project.form.privacyText ? `<p class="disclaimer form-security-note">${renderBrandText(project.form.privacyText)}</p>` : ""}
-            <p class="disclaimer">${renderBrandText(project.form.consent)}</p>
-            <div id="landingFormError" class="form-error">${renderBrandText(t("form_submit_error"))}</div>
-          </form>
-          ${project.form.trustBadges?.length ? `<div class="raw-form-trust" aria-label="${escapeHtml(t("trust_eyebrow"))}">
-            ${project.form.trustBadges
-              .map(
-                (item) => `<span>
-                  <i class="${escapeHtml(item.icon || "ti ti-shield-check")}" aria-hidden="true"></i>
-                  ${escapeHtml(item.label)}
-                </span>`,
-              )
-              .join("")}
-          </div>` : ""}
-          <div id="landingSuccess" class="form-success">
-            <h3>${escapeHtml(t("form_success_title"))}</h3>
-            <p class="section-copy">${renderBrandText(project.form.successText || `${t("form_success_copy_prefix")} ${project.name}.`)}</p>
-          </div>
+          <figcaption>Floor plans available by request</figcaption>
+        </figure>
+        <figure class="gallery-card">
+          ${renderPicture({ image: project.media.videoThumb, className: "gallery-picture" })}
+          <figcaption>Video tour thumbnail placeholder</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>`;
+
+const renderLocation = () => `
+  <section class="section location-section" id="location">
+    <div class="shell location-grid">
+      <figure class="map-preview">
+        <div class="map-embed">
+          <iframe
+            title="${escapeHtml(project.location.title)} map"
+            src="${escapeHtml(project.location.mapEmbedSrc)}"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
+        </div>
+        <figcaption>Google Maps preview. Use the button to open the exact Raw District pin.</figcaption>
+      </figure>
+      <div class="location-copy">
+        <p class="eyebrow">Location and accessibility</p>
+        <h2>${escapeHtml(project.location.title)}</h2>
+        <p>${escapeHtml(project.location.text)}</p>
+        <ul class="landmark-list">
+          ${project.location.landmarks.map((item) => `<li>${icon("check")}<span>${escapeHtml(item)}</span></li>`).join("")}
+        </ul>
+        <a class="btn btn-secondary" href="${escapeHtml(project.location.mapHref)}" target="_blank" rel="noopener">${escapeHtml(project.location.mapCta || "View on Map")}</a>
+      </div>
+    </div>
+  </section>`;
+
+const renderAdvisorPhoto = () => {
+  if (project.advisor.photo?.src) {
+    return `<figure class="advisor-photo advisor-photo-image">
+          ${renderPicture({ image: project.advisor.photo, className: "advisor-picture", sizes: "(max-width: 700px) 220px, 210px" })}
+        </figure>`;
+  }
+
+  const placeholder = project.advisor.photoPlaceholder || "Advisor photo required, 1:1 ratio";
+  return `<div class="advisor-photo" role="img" aria-label="${escapeHtml(placeholder)}">
+          <span>${escapeHtml(placeholder)}</span>
         </div>`;
 };
 
-const renderLeadFormSection = (formLabels, options = {}) => {
-  const sectionClass = ["lead-strip-section", options.className].filter(Boolean).join(" ");
-  const shellClass = options.useShell === false ? "lead-strip-inline-shell" : "shell";
-
-  return `
-    <section class="${escapeHtml(sectionClass)}" id="contact" aria-label="${escapeHtml(project.form.title)}">
-      <div class="${escapeHtml(shellClass)}">
-        ${renderLeadFormPanel(formLabels)}
-      </div>
-    </section>`;
-};
-
-const renderRawTemplateGallery = () => {
-  const items = project.gallery.items || [];
-  const feature = items[0] || { eyebrow: project.gallery.eyebrow, title: project.gallery.title, image: project.hero.background };
-  const sideItems = items.slice(1, 3);
-  while (sideItems.length < 2) sideItems.push(feature);
-  const titleMarkup = project.gallery.title.includes("Atmospheres.")
-    ? `${escapeHtml(project.gallery.title.replace("Atmospheres.", ""))}<em>Atmospheres.</em>`
-    : escapeHtml(project.gallery.title);
-
-  return `<section class="section raw-template-gallery" id="gallery">
-      <div class="shell">
-        <div class="section-kicker raw-template-centered">
-          <span class="eyebrow">${escapeHtml(project.gallery.eyebrow)}</span>
-          <h2 class="section-title">${titleMarkup}</h2>
-          ${project.gallery.text ? `<p class="section-copy">${escapeHtml(project.gallery.text)}</p>` : ""}
-        </div>
-        <div class="raw-gallery-grid">
-          <article class="raw-gallery-item raw-gallery-feature">
-            <img src="${escapeHtml(withAssetVersion(feature.image))}" alt="${escapeHtml(feature.title)}" loading="eager" decoding="async">
-            <span>${escapeHtml(feature.eyebrow)}</span>
-          </article>
-          ${sideItems
-            .map(
-              (item) => `<article class="raw-gallery-item">
-                  <img src="${escapeHtml(withAssetVersion(item.image))}" alt="${escapeHtml(item.title)}" loading="eager" decoding="async">
-                  <span>${escapeHtml(item.eyebrow)}</span>
-                </article>`,
-            )
-            .join("")}
-        </div>
-      </div>
-    </section>`;
-};
-
-const renderRawTemplateValueCards = () => {
-  const icons = ["ti ti-train", "ti ti-device-mobile", "ti ti-building-community", "ti ti-credit-card"];
-  return `<section class="section raw-template-value">
-      <div class="shell">
-        <div class="raw-value-grid">
-          ${project.snapshot.items
-            .map(
-              (item, index) => `<article class="raw-value-card">
-                <i class="${escapeHtml(icons[index] || "ti ti-building-skyscraper")}" aria-hidden="true"></i>
-                <h3>${escapeHtml(item.title)}</h3>
-                <p>${escapeHtml(item.text)}</p>
-              </article>`,
-            )
-            .join("")}
-        </div>
-      </div>
-    </section>`;
-};
-
-const renderRawTemplateLocation = () => {
-  const image = project.location.image || project.gallery.items?.[4]?.image || project.hero.background;
-  const mapUrl = project.location.mapUrl || "";
-  const mapEmbedUrl = project.location.mapEmbedUrl || "";
-  return `<section class="section raw-template-location" id="location">
-      <div class="shell raw-location-grid">
+const renderHumanTrust = () => `
+  <section class="section human-trust">
+    <div class="shell human-grid">
+      <article class="advisor-card">
+        ${renderAdvisorPhoto()}
         <div>
-          <span class="eyebrow">${escapeHtml(project.location.eyebrow)}</span>
-          <h2 class="section-title">${escapeHtml(project.location.title)}</h2>
-          <ul class="location-list">
-            ${renderLocationBullets()}
-          </ul>
-          ${mapUrl ? `<a class="raw-map-link btn btn-primary" href="${escapeHtml(mapUrl)}" target="_blank" rel="noopener" data-map-link data-cta-location="location_map">
-            <i class="ti ti-map-pin" aria-hidden="true"></i>
-            <span>Open in Google Maps</span>
-          </a>` : ""}
+          <p class="eyebrow">Local advisor</p>
+          <h2>${escapeHtml(project.advisor.name)}</h2>
+          <p>${escapeHtml(project.advisor.role)}</p>
+          <dl class="advisor-details">
+            <div><dt>Licence</dt><dd>${escapeHtml(project.advisor.licence)}</dd></div>
+            <div><dt>Languages</dt><dd>${escapeHtml(project.advisor.languages)}</dd></div>
+          </dl>
+          <p>${escapeHtml(project.advisor.statement)}</p>
+          <div class="cta-row">
+            <a class="btn btn-secondary" href="tel:${escapeHtml(company.phoneHref)}" data-call data-cta-location="advisor">${icon("phone")} Call</a>
+            <a class="btn btn-secondary" href="${escapeHtml(getWhatsAppHref())}" target="_blank" rel="noopener" data-whatsapp data-cta-location="advisor">${icon("whatsapp")} WhatsApp</a>
+          </div>
         </div>
-        <figure class="raw-location-media${mapEmbedUrl ? " raw-location-map" : ""}">
-          ${mapEmbedUrl ? `<iframe src="${escapeHtml(mapEmbedUrl)}" title="${escapeHtml(`${project.name} map location`)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>` : `<img src="${escapeHtml(withAssetVersion(image))}" alt="${escapeHtml(project.location.title)}" loading="eager" decoding="async">`}
-        </figure>
+      </article>
+      <article class="testimonial-card">
+        <p class="eyebrow">${escapeHtml(project.testimonial.label)}</p>
+        <blockquote>${escapeHtml(project.testimonial.text)}</blockquote>
+        <cite>${escapeHtml(project.testimonial.attribution)}</cite>
+      </article>
+    </div>
+  </section>`;
+
+const renderFaq = () => `
+  <section class="section faq-section">
+    <div class="shell faq-wrap">
+      <div class="section-heading">
+        <p class="eyebrow">FAQ</p>
+        <h2>Quick answers before you request availability</h2>
       </div>
-    </section>`;
-};
-
-const renderRawTemplateConsultantCta = () => {
-  const isArabic = getLocaleLang() === "ar";
-  const label = isArabic ? "إرشاد مستشار عقاري" : "Property consultant guidance";
-  const title = isArabic
-    ? "راجع Raw District مع مستشار عقاري قبل اتخاذ القرار."
-    : "Review Raw District with a property consultant before you decide.";
-  const body = isArabic
-    ? "يمكن لمستشار عقاري من Oaklyn Realty توضيح الأسعار الحالية، التوافر، خطة الدفع، تفاصيل الموقع، والخطوة الأنسب لاستفسارك."
-    : "A licensed Oaklyn Realty consultant can walk you through current pricing, availability, payment plan, location details, and the next step that fits your inquiry.";
-  const cta = isArabic ? "تواصل عبر واتساب" : "Chat on WhatsApp";
-  return `
-    <section class="raw-consultant-section" aria-label="${escapeHtml(label)}">
-      <div class="shell raw-consultant-card">
-        <div class="raw-consultant-copy">
-          <span class="raw-consultant-mark" aria-hidden="true">"</span>
-          <h2>${escapeHtml(title)}</h2>
-          <p>${escapeHtml(body)}</p>
-          ${renderWhatsAppLink({ className: "raw-consultant-whatsapp", label: cta, location: "consultant_section" })}
-        </div>
-        <figure class="raw-consultant-photo">
-          <img src="${escapeHtml(withAssetVersion("/assets/raw-district/photos/oaklyn-property-consultant.jpg"))}" alt="Oaklyn Realty property consultant" loading="lazy" decoding="async">
-        </figure>
-      </div>
-    </section>`;
-};
-
-const renderRawTemplateTrustBanner = () => `
-    <section class="raw-template-trust">
-      <div class="shell">
-        <i class="ti ti-shield-check" aria-hidden="true"></i>
-        <h2>${escapeHtml(t("trust_title"))}</h2>
-        <p>${renderBrandText(project.form.sensitiveDataNotice || t("footer_about_text"))}</p>
-        <div class="raw-trust-points">
-          <span><i class="ti ti-lock" aria-hidden="true"></i>${escapeHtml(t("verification_trust_1").replace(/[🔒✓🛡]/g, "").trim())}</span>
-          <span><i class="ti ti-certificate" aria-hidden="true"></i>${escapeHtml(t("verification_trust_2").replace(/[🔒✓🛡]/g, "").trim())}</span>
-          <span><i class="ti ti-shield-lock" aria-hidden="true"></i>${escapeHtml(t("verification_trust_3").replace(/[🔒✓🛡]/g, "").trim())}</span>
-        </div>
-      </div>
-    </section>`;
-
-const renderRawTemplateLaunchBanner = () => {
-  if (!project.launchBanner?.text) return "";
-  return `<div class="raw-launch-banner">${escapeHtml(project.launchBanner.text)}</div>`;
-};
-
-const renderRawTemplateNav = () => `
-  <header class="topbar raw-template-nav">
-    <div class="shell nav">
-      <a class="brand raw-brand-wordmark" href="${escapeHtml(project.homeHref || "/")}" aria-label="${escapeHtml(company.company)} ${escapeHtml(project.name)} ${escapeHtml(t("brand_aria_suffix"))}">
-        <span>RAW DISTRICT</span>
-      </a>
-      <nav class="nav-links" aria-label="${escapeHtml(t("primary_nav_aria"))}">
-        <a href="#overview">Thesis</a>
-        <a href="#gallery">Architecture</a>
-        <a href="#location">Investment</a>
-        <a href="#gallery">${escapeHtml(t("nav_gallery"))}</a>
-      </nav>
-      <div class="nav-actions">
-        <a class="btn btn-primary" href="#contact">${escapeHtml(t("nav_request_details"))}</a>
+      <div class="faq-list">
+        ${project.faq
+          .map(
+            (item) => `<details>
+          <summary>${escapeHtml(item.question)}</summary>
+          <p>${escapeHtml(item.answer)}</p>
+        </details>`,
+          )
+          .join("")}
       </div>
     </div>
-  </header>`;
+  </section>`;
 
-const renderRawArabicTemplateLandingPage = ({ formLabels, options = {} }) => {
-  const lang = getLocaleLang();
-  const dir = getLocaleDir();
-  const bodyClass = getBodyClass("template-raw-ar", project.launchBanner?.text ? "has-launch-banner" : "");
-  return `<!doctype html>
-<html lang="${escapeHtml(lang)}" dir="${escapeHtml(dir)}">
-<head>
-${renderHead({
-  title: project.seo.title,
-  description: project.seo.description,
-  canonical: project.landingPageUrl,
-  noindex: Boolean(options.noindex),
-})}
-  <script>window.OAKLYN_LANDING_CONFIG = ${json(getClientConfig(options))};</script>
-</head>
-<body${bodyClass ? ` class="${escapeHtml(bodyClass)}"` : ""}>
-${renderGtmBody(project.tracking, escapeHtml)}
-${options.publicLanguageEntry ? renderLanguageChoiceOverlay() : ""}
-${renderRawTemplateLaunchBanner()}
-${renderRawTemplateNav()}
-  <main class="raw-template-page">
-    <section class="hero raw-template-hero">
-      ${renderHeroVisual()}
-      <div class="hero-shade"></div>
-      <div class="shell raw-hero-grid">
-        <div class="hero-content">
-          <span class="eyebrow">${escapeHtml(project.name)}</span>
-          <h1>${escapeHtml(project.hero.title)}</h1>
-          <p>${escapeHtml(project.hero.subtitle)}</p>
-          <div class="cta-row">
-            <a class="btn btn-primary" href="#contact">${escapeHtml(project.hero.primaryCta)}</a>
-            <a class="btn btn-ghost" href="#contact"><span>${escapeHtml(project.hero.secondaryCta)}</span><i class="ti ti-download" aria-hidden="true"></i></a>
-          </div>
-        </div>
+const renderFinalCta = () => `
+  <section class="section final-cta">
+    <div class="shell final-cta-panel">
+      <div>
+        <p class="eyebrow">Get Current Prices, Floor Plans and Availability</p>
+        <h2>Tell us what you are looking for and a property advisor will provide the relevant options.</h2>
       </div>
-    </section>
-    <section class="raw-hero-highlights" id="overview" aria-label="${escapeHtml(t("quick_highlights_title"))}">
-      <div class="highlight-grid">
-        ${renderHighlights()}
+      <div class="final-actions">
+        <button class="btn btn-primary" type="button" data-open-lead-modal>${escapeHtml(project.cta)}</button>
+        <a class="text-link" href="tel:${escapeHtml(company.phoneHref)}" data-call data-cta-location="final">${icon("phone")} Call</a>
+        <a class="text-link" href="${escapeHtml(getWhatsAppHref())}" target="_blank" rel="noopener" data-whatsapp data-cta-location="final">${icon("whatsapp")} WhatsApp</a>
       </div>
-    </section>
+    </div>
+  </section>`;
 
-    ${renderRawTemplateGallery()}
-    ${renderRawTemplateValueCards()}
-    ${renderRawTemplateLocation()}
-    ${renderRawTemplateConsultantCta()}
-    ${renderLeadFormSection(formLabels, { className: "raw-template-contact" })}
-    ${renderFaq()}
-    ${renderRawTemplateTrustBanner()}
-  </main>
-  ${renderFooter()}
-  ${renderWhatsAppFloat()}
-  ${renderPermitQrBadge()}
-  ${renderWhatsAppModal()}
-  <div class="mobile-contact-bar">
-    <a href="tel:${escapeHtml(company.phoneHref)}">${escapeHtml(t("mobile_call"))}</a>
-    ${renderWhatsAppLink({ label: t("mobile_whatsapp"), location: "mobile_contact_bar" })}
-  </div>
-  ${renderVerificationOverlay()}
-  <script src="/client.js?v=${escapeHtml(project.assetVersion)}" defer></script>
-</body>
-</html>`;
+const renderFooter = () => `
+  <footer class="site-footer">
+    <div class="shell footer-grid">
+      <div>
+        <strong>${escapeHtml(company.legalName)}</strong>
+        <p>${escapeHtml(company.office)}</p>
+      </div>
+      <div>
+        <strong>Licence</strong>
+        <p>${escapeHtml(project.compliance.licence)}<br>${escapeHtml(project.compliance.rera)}<br>${escapeHtml(project.compliance.permitLabel)}: ${escapeHtml(project.compliance.permitValue)}</p>
+      </div>
+      <div>
+        <strong>Contact</strong>
+        <p><a href="tel:${escapeHtml(company.phoneHref)}">${escapeHtml(company.phoneDisplay)}</a><br><a href="mailto:${escapeHtml(company.email)}">${escapeHtml(company.email)}</a></p>
+      </div>
+      <div>
+        <strong>Legal</strong>
+        <p><a href="${escapeHtml(company.privacyUrl)}">Privacy Policy</a><br><a href="${escapeHtml(company.termsUrl)}">Terms</a></p>
+      </div>
+    </div>
+    <div class="shell footer-bottom">
+      <p>Equal, transparent enquiry process. Pricing, availability, payment plans and handover dates are subject to developer confirmation.</p>
+      <p>&copy; 2026 ${escapeHtml(company.legalName)}</p>
+    </div>
+  </footer>`;
+
+const renderLeadModal = () => `
+  <div class="lead-modal" data-lead-modal hidden aria-hidden="true">
+    <div class="modal-backdrop" data-close-lead-modal></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="leadModalTitle">
+      <button class="modal-close" type="button" data-close-lead-modal aria-label="Close form">Close</button>
+      ${renderShortForm()}
+    </div>
+  </div>`;
+
+const renderGalleryModal = () => `
+  <div class="gallery-modal" data-gallery-modal hidden aria-hidden="true">
+    <div class="modal-backdrop" data-close-gallery></div>
+    <div class="gallery-modal-panel" role="dialog" aria-modal="true" aria-labelledby="galleryModalTitle">
+      <button class="modal-close" type="button" data-close-gallery aria-label="Close gallery">Close</button>
+      <h2 id="galleryModalTitle">Raw District visual gallery</h2>
+      <div class="gallery-modal-grid">
+        ${project.media.gallery
+          .map(
+            (item) => `<figure>
+          ${renderPicture({ image: item, className: "gallery-picture" })}
+          <figcaption>${escapeHtml(item.caption)}</figcaption>
+        </figure>`,
+          )
+          .join("")}
+      </div>
+    </div>
+  </div>`;
+
+const renderMobileBar = () => `
+  <nav class="mobile-action-bar" aria-label="Mobile contact actions">
+    <a href="tel:${escapeHtml(company.phoneHref)}" data-call data-cta-location="mobile_bar">${icon("phone")} Call</a>
+    <button type="button" data-open-lead-modal>${escapeHtml(project.cta)}</button>
+    <a href="${escapeHtml(getWhatsAppHref())}" target="_blank" rel="noopener" data-whatsapp data-cta-location="mobile_bar">${icon("whatsapp")} WhatsApp</a>
+  </nav>`;
+
+const renderPermitQrIcon = () => {
+  const permitQr = project.compliance?.permitQr;
+  if (!permitQr?.src) return "";
+  return `<div class="permit-qr-badge" aria-label="Raw District permit QR code">
+    <img src="${escapeHtml(withVersion(permitQr.src))}" alt="${escapeHtml(permitQr.alt || "Permit QR code")}" loading="lazy" decoding="async">
+    <span>Permit QR</span>
+  </div>`;
 };
 
-const renderLandingPage = (nextProject, options = {}) => {
-  setProject(nextProject);
-  const formLabels = getFormLabels();
-  if (project.landingTemplate === "raw-ar-attached-template") {
-    return renderRawArabicTemplateLandingPage({ formLabels, options });
-  }
-
-  const lang = getLocaleLang();
-  const dir = getLocaleDir();
-  const bodyClass = getBodyClass();
-  return `<!doctype html>
-<html lang="${escapeHtml(lang)}" dir="${escapeHtml(dir)}">
+const renderPage = ({ variant = "a", canonical = project.landingPageUrl } = {}) => `<!doctype html>
+<html lang="en">
 <head>
-${renderHead({
-  title: project.seo.title,
-  description: project.seo.description,
-  canonical: project.landingPageUrl,
-  noindex: Boolean(options.noindex),
-})}
-  <script>window.OAKLYN_LANDING_CONFIG = ${json(getClientConfig(options))};</script>
+${renderHead({ canonical })}
 </head>
-<body${bodyClass ? ` class="${escapeHtml(bodyClass)}"` : ""}>
-${renderGtmBody(project.tracking, escapeHtml)}
-${options.publicLanguageEntry ? renderLanguageChoiceOverlay() : ""}
-${renderNav()}
+<body class="${variant === "b" ? "variant-b" : "variant-a"}" data-default-variant="${escapeHtml(variant)}">
+  ${renderGtmBody(project.tracking, escapeHtml)}
+  ${renderHeader()}
   <main>
-    <section class="hero">
-      ${renderHeroVisual()}
-      <div class="hero-shade"></div>
-      <div class="shell hero-content">
-        <span class="eyebrow">${renderBrandText(project.hero.eyebrow)}</span>
-        <h1>${escapeHtml(project.hero.title)}</h1>
-        <p>${escapeHtml(project.hero.subtitle)}</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="#contact">${escapeHtml(project.hero.primaryCta)}</a>
-          <a class="btn btn-ghost" href="#contact">${escapeHtml(project.hero.secondaryCta)}</a>
-          <a class="btn btn-whatsapp" href="${escapeHtml(getWhatsAppHref())}" target="_blank" rel="noopener" data-whatsapp-cta data-cta-location="hero_whatsapp" data-whatsapp-destination="${escapeHtml(getWhatsAppHref())}">
-            <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>
-            <span>${escapeHtml(t("hero_whatsapp_cta"))}</span>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    ${renderLeadFormSection(formLabels)}
-
-    <section class="section quick-highlights" id="overview">
-      <div class="shell">
-        <div class="section-kicker">
-          <span class="eyebrow">${escapeHtml(t("quick_highlights_eyebrow"))}</span>
-          <h2 class="section-title">${escapeHtml(t("quick_highlights_title"))}</h2>
-        </div>
-        <div class="highlight-grid">
-          ${renderHighlights()}
-        </div>
-      </div>
-    </section>
-
-    ${renderUnitCardsSection()}
-
-    ${renderAbout()}
-
-    <section class="section gallery-section" id="gallery">
-      <div class="shell">
-        <div class="gallery-header section-kicker">
-          <span class="eyebrow">${escapeHtml(project.gallery.eyebrow)}</span>
-          <h2 class="section-title">${escapeHtml(project.gallery.title)}</h2>
-          <p class="section-copy">${escapeHtml(project.gallery.text)}</p>
-        </div>
-        <div class="gallery glass-card" data-gallery>
-          <div class="gallery-track" data-gallery-track>
-            ${renderGallerySlides()}
-          </div>
-          <div class="gallery-progress" aria-hidden="true"><span data-gallery-progress></span></div>
-        </div>
-        <div class="gallery-controls">
-          <div class="gallery-dots">${renderGalleryDots()}</div>
-          <div class="gallery-arrows">
-            <button class="gallery-arrow" type="button" aria-label="${escapeHtml(t("gallery_prev"))}" data-gallery-prev>←</button>
-            <button class="gallery-arrow" type="button" aria-label="${escapeHtml(t("gallery_next"))}" data-gallery-next>→</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section why-section">
-      <div class="shell">
-        <div class="section-kicker">
-          <span class="eyebrow">${escapeHtml(project.snapshot.eyebrow)}</span>
-          <h2 class="section-title">${escapeHtml(project.snapshot.title)}</h2>
-        </div>
-        <div class="why-grid">${renderSnapshotItems()}</div>
-      </div>
-    </section>
-
-    <section class="section" id="location">
-      <div class="shell location-panel">
-        <div>
-          <span class="eyebrow">${escapeHtml(project.location.eyebrow)}</span>
-          <h2 class="section-title">${escapeHtml(project.location.title)}</h2>
-        </div>
-        <ul class="location-list">
-          ${renderLocationBullets()}
-        </ul>
-      </div>
-    </section>
-
-    ${renderAboutUsSection()}
-
+    ${renderHeroA()}
+    ${renderHeroB()}
+    ${renderTrustStrip()}
+    ${renderBenefits()}
+    ${renderGallery()}
+    ${renderLocation()}
+    ${renderHumanTrust()}
     ${renderFaq()}
+    ${renderFinalCta()}
+  </main>
+  ${renderFooter()}
+  ${renderLeadModal()}
+  ${renderGalleryModal()}
+  ${renderPermitQrIcon()}
+  ${renderMobileBar()}
+  <script>
+    window.OAKLYN_LANDING_CONFIG = ${json({
+      project_name: project.name,
+      project_slug: project.slug,
+      source_page: project.sourcePage,
+      landing_page_url: project.landingPageUrl,
+      thank_you_page_url: project.thankYouPageUrl,
+      webhook_url: project.webhookUrl,
+      cta: project.cta,
+      default_variant: variant
+    })};
+  </script>
+  <script src="/client.js?v=${escapeHtml(project.assetVersion)}" defer></script>
+</body>
+</html>`;
 
-    <section class="section trust-compliance">
-      <div class="shell">
-        <div class="section-kicker">
-          <span class="eyebrow">${escapeHtml(t("trust_eyebrow"))}</span>
-          <h2 class="section-title">${escapeHtml(t("trust_title"))}</h2>
-        </div>
-        <div class="compliance-grid">${renderComplianceCards()}</div>
-        ${renderPermitNote()}
+const renderThankYouPage = () => {
+  const canonical = absoluteUrl("thank-you/");
+  return `<!doctype html>
+<html lang="en">
+<head>
+${renderHead({
+  canonical,
+  title: "Your Request Has Been Received | Raw District",
+  description: "Oaklyn Realty has received your Raw District prices and availability request."
+})}
+</head>
+<body class="thank-you-page">
+  ${renderGtmBody(project.tracking, escapeHtml)}
+  ${renderHeader()}
+  <main class="thank-you-main">
+    <section class="shell thank-you-panel">
+      <span class="success-icon">${icon("check")}</span>
+      <p class="eyebrow">Your Request Has Been Received</p>
+      <h1>Your Request Has Been Received</h1>
+      <p>We will send the relevant prices and availability using your preferred contact method.</p>
+      <div class="next-steps">
+        <a class="btn btn-secondary" href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Raw%20District%20Viewing&details=Discuss%20Raw%20District%20prices%2C%20floor%20plans%20and%20availability" target="_blank" rel="noopener" data-book-viewing>${icon("calendar")} Add viewing to calendar</a>
+        <a class="btn btn-secondary" href="${escapeHtml(getWhatsAppHref())}" target="_blank" rel="noopener" data-whatsapp data-cta-location="thank_you_page">${icon("whatsapp")} Start WhatsApp conversation</a>
+        <a class="btn btn-secondary" href="tel:${escapeHtml(company.phoneHref)}" data-call data-cta-location="thank_you_page">${icon("phone")} Call the property advisor</a>
       </div>
     </section>
   </main>
   ${renderFooter()}
-  ${renderWhatsAppFloat()}
-  ${renderPermitQrBadge()}
-  ${renderWhatsAppModal()}
-  <div class="mobile-contact-bar">
-    <a href="tel:${escapeHtml(company.phoneHref)}">${escapeHtml(t("mobile_call"))}</a>
-    ${renderWhatsAppLink({ label: t("mobile_whatsapp"), location: "mobile_contact_bar" })}
-  </div>
-  ${renderVerificationOverlay()}
+  ${renderPermitQrIcon()}
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: "landing_page_view", page_type: "thank_you", project_slug: "${escapeHtml(project.slug)}" });
+  </script>
   <script src="/client.js?v=${escapeHtml(project.assetVersion)}" defer></script>
 </body>
 </html>`;
 };
 
-const renderThankYouTracking = () => `<script>
-(function () {
-  var params = new URLSearchParams(window.location.search);
-  var leadId = params.get('lead_id') || '';
-  var eventId = leadId || (${JSON.stringify(project.slug)} + '_thank_you_' + Date.now());
-  var trackingPayload = {
-    project_name: ${JSON.stringify(project.name)},
-    project_slug: ${JSON.stringify(project.slug)},
-    source_page: ${JSON.stringify(project.sourcePage)},
-    landing_page_url: ${JSON.stringify(project.landingPageUrl)},
-    thank_you_page_url: ${JSON.stringify(project.thankYouPageUrl)},
-    lead_id: leadId,
-    event_id: eventId,
-    gclid: params.get('gclid') || '',
-    gbraid: params.get('gbraid') || '',
-    wbraid: params.get('wbraid') || '',
-    utm_source: params.get('utm_source') || '',
-    utm_medium: params.get('utm_medium') || '',
-    utm_campaign: params.get('utm_campaign') || '',
-    utm_content: params.get('utm_content') || '',
-    utm_term: params.get('utm_term') || ''
-  };
-
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push(Object.assign({ event: 'lead_thank_you_page_view' }, trackingPayload));
-})();
-</script>`;
-
-const renderThankYouLanguageRedirect = () => `<script>
-(function () {
-  try {
-    var params = new URLSearchParams(window.location.search);
-    var storedLang = "";
-    try {
-      storedLang = window.localStorage.getItem(${JSON.stringify(languagePreferenceStorageKey)}) || "";
-    } catch (error) {}
-    var lang = String(params.get("lang") || storedLang || "").toLowerCase();
-    if (lang !== "ar") return;
-    var target = new URL("/${trimSlashes(arabicProject.alternateThankYouPath)}/", window.location.origin);
-    params.forEach(function (value, key) {
-      target.searchParams.set(key, value);
-    });
-    window.location.replace(target.pathname + target.search + window.location.hash);
-  } catch (error) {}
-})();
-</script>`;
-
-const renderThankYouPage = ({ currentProject, canonical, backHref, languageRedirect = false }) => {
-  setProject(currentProject);
-  const lang = getLocaleLang();
-  const dir = getLocaleDir();
-  const bodyClass = getBodyClass();
-  const thankYouBodyClass = [bodyClass, "thank-you-page"].filter(Boolean).join(" ");
-  return `<!doctype html>
-<html lang="${escapeHtml(lang)}" dir="${escapeHtml(dir)}">
-<head>
-${renderHead({
-  title: `${t("thank_you_meta_title_prefix")} | ${project.name} | ${company.company}`,
-  description: t("thank_you_meta_description"),
-  canonical,
-  noindex: true,
-  extraHeadBeforeGtm: languageRedirect ? renderThankYouLanguageRedirect() : "",
-})}
-</head>
-<body${thankYouBodyClass ? ` class="${escapeHtml(thankYouBodyClass)}"` : ""}>
-${renderGtmBody(project.tracking, escapeHtml)}
-${renderNav()}
-  <main class="thank-you-main">
-    <section class="thank-you-hero">
-      <div class="thank-you-bg" style="background-image: url('${escapeHtml(withAssetVersion(project.hero.background))}');"></div>
-      <div class="thank-you-shade" aria-hidden="true"></div>
-      <div class="shell thank-you-shell">
-        <section class="thank-you-card">
-          <span class="eyebrow">${escapeHtml(t("thank_you_eyebrow"))}</span>
-          <div class="thank-you-icon" aria-hidden="true">
-            <i class="ti ti-shield-check"></i>
-          </div>
-          <h1>${escapeHtml(t("thank_you_title"))}</h1>
-          <p class="section-copy">${renderBrandText(project.form.thankYouText || `${t("thank_you_copy_prefix")} ${project.name}. ${t("thank_you_copy_suffix")}`)}</p>
-          <div class="thank-you-details">
-            <span>${escapeHtml(project.name)}</span>
-            <span>${escapeHtml(company.phoneDisplay)}</span>
-          </div>
-          <div class="cta-row">
-            <a class="btn btn-primary" href="${escapeHtml(backHref)}">${escapeHtml(t("back_to_project"))}</a>
-            <a class="btn btn-ghost" href="${escapeHtml(company.contactUrl)}">${escapeHtml(t("contact_oaklyn"))}</a>
-          </div>
-        </section>
-      </div>
-    </section>
-  </main>
-  ${renderFooter()}
-  ${renderThankYouTracking()}
-</body>
-</html>`;
-};
-
-const writeGeneratedFile = async (relativePath, contents) => {
+const writeHtml = async (relativePath, html) => {
   const target = path.join(distDir, relativePath);
   await mkdir(path.dirname(target), { recursive: true });
-  await writeFile(target, contents);
-};
-
-const writeRootFile = async (relativePath, contents) => {
-  const target = path.join(rootDir, relativePath);
-  await mkdir(path.dirname(target), { recursive: true });
-  await writeFile(target, contents);
-};
-
-const copyRequiredAssets = async () => {
-  const source = path.join(rootDir, "assets");
-  const target = path.join(distDir, "assets");
-
-  try {
-    const sourceStat = await stat(source);
-    if (!sourceStat.isDirectory()) {
-      throw new Error("assets exists but is not a directory");
-    }
-  } catch (error) {
-    return;
-  }
-
-  await cp(source, target, { recursive: true });
+  await writeFile(target, html, "utf8");
 };
 
 await rm(distDir, { recursive: true, force: true });
 await mkdir(distDir, { recursive: true });
+await cp(path.join(rootDir, "assets"), path.join(distDir, "assets"), { recursive: true });
+await cp(path.join(rootDir, "src", "styles.css"), path.join(distDir, "styles.css"));
+await cp(path.join(rootDir, "src", "client.js"), path.join(distDir, "client.js"));
 
-const publicRoutePath = trimSlashes(landingProject.publicRoutePath || landingProject.routePath);
-const publicThankYouPath = trimSlashes(landingProject.publicThankYouPath || "thank-you");
-const internalEnglishRoutePath = trimSlashes(landingProject.routePath);
-const internalEnglishThankYouPath = trimSlashes(landingProject.alternateThankYouPath);
-const internalArabicRoutePath = trimSlashes(arabicProject?.routePath);
-const internalArabicThankYouPath = trimSlashes(arabicProject?.alternateThankYouPath);
+await writeHtml("index.html", renderPage({ variant: "a", canonical: project.landingPageUrl }));
+await writeHtml(`${trimSlashes(project.routePath)}/index.html`, renderPage({ variant: "a", canonical: absoluteUrl(project.routePath) }));
+await writeHtml(`${trimSlashes(project.variantBPath)}/index.html`, renderPage({ variant: "b", canonical: absoluteUrl(project.variantBPath) }));
+await writeHtml("thank-you/index.html", renderThankYouPage());
 
-const standaloneLanguageRoutes = {
-  en: "/index.html",
-  ar: "/index.html"
-};
-const standaloneEnglishHtml = renderLandingPage(landingProject, {
-  languageRoutes: standaloneLanguageRoutes
-});
-await writeGeneratedFile("index-en.html", standaloneEnglishHtml);
-await writeRootFile("index-en.html", standaloneEnglishHtml);
-await writeGeneratedFile("index.html", standaloneEnglishHtml);
-await writeRootFile("index.html", standaloneEnglishHtml);
-await writeGeneratedFile("index-ar.html", standaloneEnglishHtml);
-await writeRootFile("index-ar.html", standaloneEnglishHtml);
-
-if (publicRoutePath) {
-  const publicRouteHtml = renderLandingPage(landingProject);
-  await writeGeneratedFile(`${publicRoutePath}/index.html`, publicRouteHtml);
-  await writeRootFile(`${publicRoutePath}/index.html`, publicRouteHtml);
-}
-
-if (publicThankYouPath) {
-  const publicThankYouHtml = renderThankYouPage({
-    currentProject: landingProject,
-    canonical: landingProject.thankYouPageUrl,
-    backHref: landingProject.homeHref || "/",
-    languageRedirect: false,
-  });
-  await writeGeneratedFile(`${publicThankYouPath}/index.html`, publicThankYouHtml);
-  await writeRootFile(`${publicThankYouPath}/index.html`, publicThankYouHtml);
-}
-
-if (internalEnglishRoutePath) {
-  await writeGeneratedFile(`${internalEnglishRoutePath}/index.html`, renderLandingPage(landingProject, { noindex: true }));
-}
-
-if (internalEnglishThankYouPath) {
-  const internalEnglishThankYouHtml = renderThankYouPage({
-    currentProject: landingProject,
-    canonical: landingProject.thankYouPageUrl,
-    backHref: landingProject.homeHref || (publicRoutePath ? `/${publicRoutePath}/` : "/"),
-  });
-  await writeGeneratedFile(`${internalEnglishThankYouPath}/index.html`, internalEnglishThankYouHtml);
-  await writeRootFile(`${internalEnglishThankYouPath}/index.html`, internalEnglishThankYouHtml);
-}
-
-const linkHubRoutePath = trimSlashes(landingProject.linkHub?.routePath);
-if (linkHubRoutePath) {
-  await writeGeneratedFile(`${linkHubRoutePath}/index.html`, renderLinkHubPage(landingProject));
-}
-
-if (internalArabicRoutePath) {
-  await writeGeneratedFile(`${internalArabicRoutePath}/index.html`, renderLandingPage(landingProject, { noindex: true }));
-}
-
-if (internalArabicThankYouPath) {
-  const internalArabicThankYouHtml = renderThankYouPage({
-    currentProject: landingProject,
-    canonical: landingProject.thankYouPageUrl,
-    backHref: landingProject.homeHref || (publicRoutePath ? `/${publicRoutePath}/` : "/"),
-  });
-  await writeGeneratedFile(`${internalArabicThankYouPath}/index.html`, internalArabicThankYouHtml);
-  await writeRootFile(`${internalArabicThankYouPath}/index.html`, internalArabicThankYouHtml);
-}
-
-await copyFile(path.join(rootDir, "src", "styles.css"), path.join(distDir, "styles.css"));
-await copyFile(path.join(rootDir, "src", "client.js"), path.join(distDir, "client.js"));
-await copyFile(path.join(rootDir, "src", "styles.css"), path.join(rootDir, "styles.css"));
-await copyFile(path.join(rootDir, "src", "client.js"), path.join(rootDir, "client.js"));
-await copyRequiredAssets();
-
-console.log(`Built ${landingProject.name} landing project in ${distDir}`);
+console.log(`Built ${project.name} campaign landing page.`);

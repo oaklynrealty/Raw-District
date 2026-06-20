@@ -1,10 +1,10 @@
 {
-  "name": "raw-district-standalone",
+  "name": "raw-district-ads-campaign",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs && node scripts/postbuild-seo.mjs && node scripts/direct-whatsapp.mjs && node scripts/dedupe-form-submits.mjs && node scripts/strict-phone-sequence.mjs && node scripts/country-phone-rules.mjs && node scripts/complete-country-phone-rules.mjs",
-    "check": "node scripts/build.mjs && node scripts/postbuild-seo.mjs && node scripts/direct-whatsapp.mjs && node scripts/dedupe-form-submits.mjs && node scripts/strict-phone-sequence.mjs && node scripts/country-phone-rules.mjs && node scripts/complete-country-phone-rules.mjs && node scripts/check.mjs"
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/build.mjs && node scripts/check.mjs"
   }
 }
