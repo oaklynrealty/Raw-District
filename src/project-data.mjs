@@ -11,7 +11,7 @@ export const project = {
   thankYouPageUrl: "https://raw-district.oaklynrealty.ae/thank-you/",
   routePath: "/raw-district",
   variantBPath: "/variant-b",
-  assetVersion: "20260620-exact-crm-fields-1",
+  assetVersion: "20260620-single-conversion-1",
   webhookUrl: "https://hooks.zapier.com/hooks/catch/27424919/42y0f2c/",
   tracking: getTrackingConfig(),
   cta: "Show Me Prices & Availability",

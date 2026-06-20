@@ -66,6 +66,18 @@
     return String(value || "").replace(/[^\d]/g, "");
   }
 
+  function hasEnoughDigitVariation(value) {
+    return new Set(String(value || "").split("")).size >= 4;
+  }
+
+  function isSequentialDigits(value) {
+    const digits = String(value || "");
+    if (digits.length < 6) return false;
+    const ascending = "01234567890123456789";
+    const descending = "98765432109876543210";
+    return ascending.includes(digits) || descending.includes(digits);
+  }
+
   function isValidPhone(countryCode, phone) {
     const code = normalizeDialCode(countryCode).replace(/\D/g, "");
     const local = normalizePhone(phone);
@@ -73,6 +85,9 @@
     const full = code + national;
     if (!national || national.length < 6 || national.length > 12) return false;
     if (/^(\d)\1+$/.test(national)) return false;
+    if (!hasEnoughDigitVariation(national)) return false;
+    if (isSequentialDigits(national)) return false;
+    if (/^(123456|1234567|12345678|123456789|987654|9876543|98765432|987654321)$/.test(national)) return false;
     return full.length >= 8 && full.length <= 15;
   }
 
@@ -86,7 +101,30 @@
   function isValidEmail(value) {
     const email = String(value || "").trim();
     if (!email) return false;
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
+    const parts = email.toLowerCase().split("@");
+    const local = parts[0] || "";
+    const domain = parts[1] || "";
+    const blockedLocalParts = new Set(["test", "fake", "demo", "sample", "asdf", "qwerty", "abc", "name", "email", "user", "unknown", "none"]);
+    const blockedDomains = new Set([
+      "example.com",
+      "example.net",
+      "example.org",
+      "test.com",
+      "fake.com",
+      "mailinator.com",
+      "tempmail.com",
+      "temp-mail.org",
+      "10minutemail.com",
+      "guerrillamail.com",
+      "yopmail.com",
+      "sharklasers.com",
+      "trashmail.com"
+    ]);
+    if (blockedLocalParts.has(local.replace(/\+.*/, ""))) return false;
+    if (blockedDomains.has(domain)) return false;
+    if (domain.includes("tempmail") || domain.includes("mailinator") || domain.includes("guerrillamail")) return false;
+    return true;
   }
 
   function getCookieValue(name) {
@@ -426,7 +464,7 @@
     ].join("\n");
 
     const payload = Object.assign({}, hidden, {
-      event: "generate_lead",
+      event: "lead_success",
       project_name: config.project_name,
       project: config.project_name,
       brokerage: "Oaklyn Realty",
@@ -757,11 +795,14 @@
       event.preventDefault();
       trackStart();
 
+      if (form.dataset.submissionLocked === "true") return;
+
       const honeypot = form.elements.website;
       if (honeypot && honeypot.value) return;
 
       if (!validateContactFields(form)) return;
 
+      form.dataset.submissionLocked = "true";
       const status = form.querySelector("[data-form-status]");
       const button = form.querySelector('button[type="submit"]');
       const originalLabel = button ? button.textContent : "";
@@ -779,15 +820,6 @@
 
       try {
         await sendLead(payload);
-        pushDataLayerEvent({
-          event: "generate_lead",
-          event_id: leadId,
-          lead_id: leadId,
-          form_type: payload.form_type,
-          landing_page_variant: payload.landing_page_variant,
-          property_preference: payload.property_preference,
-          purchase_timeframe: payload.purchase_timeframe
-        });
         pushDataLayerEvent({
           event: "lead_success",
           event_id: leadId,
@@ -820,6 +852,7 @@
         });
         showSuccess(form, payload);
       } catch (error) {
+        form.dataset.submissionLocked = "false";
         if (status) {
           status.textContent = "We could not process the request. Please call or WhatsApp Oaklyn Realty directly.";
           status.classList.add("is-visible", "is-error");

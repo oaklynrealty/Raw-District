@@ -66,8 +66,10 @@ const requiredTerms = [
   "form_start",
   "form_step_1_complete",
   "form_step_2_complete",
-  "generate_lead",
   "lead_success",
+  "submissionLocked",
+  "isSequentialDigits",
+  "blockedDomains",
   "event_id",
   "events_id",
   "portal_lead_id",
@@ -201,6 +203,12 @@ assert(!landingHtml.includes('class="permit-qr-link" href='), "Permit QR badge s
 assert(!landingHtml.includes("Email address <span>Optional</span>"), "Email field should be required, not optional.");
 assert(!variantHtml.includes("Email address <span>Optional</span>"), "Variant email field should be required, not optional.");
 assert(!landingHtml.includes("https://hooks.zapier.com/hooks/catch/27424919/uvzwm7a/"), "Raw District English should use its dedicated webhook.");
+assert(!client.includes('event: "generate_lead"'), "Do not push duplicate generate_lead conversion events.");
+assert(client.includes('event: "lead_success"'), "Lead conversion must use lead_success only.");
+assert(client.includes('webhook_status: "success"'), "lead_success must include webhook_status success.");
+assert(client.includes('form_submission_confirmed: "true"'), "lead_success must confirm form submission.");
+assert(client.includes('conversion_type: "form"'), "lead_success must include conversion_type form.");
+assert(client.includes('conversion_action: "form_submission"'), "lead_success must include conversion_action form_submission.");
 
 const jsonLdBlocks = [...landingHtml.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/g)];
 assert(jsonLdBlocks.length >= 3, "Expected Organization, WebPage and RealEstateListing JSON-LD.");
