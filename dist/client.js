@@ -101,6 +101,23 @@
     return field.value || "";
   }
 
+  function splitName(fullName) {
+    const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+    return {
+      firstName: parts[0] || "",
+      lastName: parts.slice(1).join(" ")
+    };
+  }
+
+  function encodeWebhookPayload(payload) {
+    const requestBody = new URLSearchParams();
+    Object.keys(payload || {}).forEach(function (key) {
+      const value = payload[key];
+      requestBody.append(key, value == null ? "" : String(value));
+    });
+    return requestBody;
+  }
+
   function setupCountryCodePickers() {
     const pickers = Array.from(document.querySelectorAll("[data-country-code-picker]"));
 
@@ -242,21 +259,73 @@
     const hidden = setHiddenFields(form, leadId);
     const countryCode = formValue(form, "phone_country_code");
     const phone = formValue(form, "phone");
+    const fullName = String(formValue(form, "full_name")).trim();
+    const nameParts = splitName(fullName);
+    const phoneNumber = getE164(countryCode, phone);
+    const phoneLocal = normalizePhone(phone);
+    const phoneCountryCode = normalizeDialCode(countryCode);
+    const email = String(formValue(form, "email")).trim().toLowerCase();
+    const propertyPreference = formValue(form, "property_preference");
+    const purchaseTimeframe = formValue(form, "purchase_timeframe");
+    const contactMethod = formValue(form, "contact_method") || "Advisor follow-up";
+    const leadTitle = fullName
+      ? fullName + " - Raw District prices and availability"
+      : "Raw District prices and availability request";
+    const message = [
+      "Project: " + config.project_name,
+      "Property preference: " + (propertyPreference || "Not specified"),
+      "Purchase timeframe: " + (purchaseTimeframe || "Not specified"),
+      "Preferred contact: " + contactMethod,
+      "Request: Official price list, floor plans and current availability"
+    ].join("\n");
+
     const payload = Object.assign({}, hidden, {
       event: "generate_lead",
       project_name: config.project_name,
+      project: config.project_name,
+      brokerage: "Oaklyn Realty",
       form_type: form.dataset.formType || "",
-      full_name: String(formValue(form, "full_name")).trim(),
-      phone_country_code: normalizeDialCode(countryCode),
-      phone_local: normalizePhone(phone),
-      phone_number: getE164(countryCode, phone),
-      email: String(formValue(form, "email")).trim().toLowerCase(),
-      property_preference: formValue(form, "property_preference"),
-      purchase_timeframe: formValue(form, "purchase_timeframe"),
-      contact_method: formValue(form, "contact_method") || "Advisor follow-up",
+      lead_title: leadTitle,
+      title: leadTitle,
+      TITLE: leadTitle,
+      full_name: fullName,
+      name: fullName,
+      first_name: nameParts.firstName,
+      last_name: nameParts.lastName,
+      phone: phoneNumber,
+      phone_number: phoneNumber,
+      mobile: phoneNumber,
+      whatsapp_number: phoneNumber,
+      phone_country_code: phoneCountryCode,
+      phone_local: phoneLocal,
+      email: email,
+      EMAIL: email,
+      property_preference: propertyPreference,
+      purchase_timeframe: purchaseTimeframe,
+      contact_method: contactMethod,
+      preferred_contact: contactMethod,
+      unit: propertyPreference,
+      inquiry: purchaseTimeframe || "Prices and availability request",
+      preferred_project: config.project_name,
+      preferred_unit: propertyPreference,
+      project_interest: config.project_name,
+      property_type: propertyPreference,
+      inquiry_type: purchaseTimeframe || "Prices and availability request",
+      unit_type: propertyPreference,
+      lead_type: "Offplan Buyer",
+      source: "Website",
+      lead_source: "Website",
+      message: message,
+      inquiry_message: message,
+      comments: message,
       consent: formValue(form, "consent") === "yes",
+      gdpr_consent:
+        "By submitting this form, you agree to be contacted by our property consultants regarding your inquiry.",
       landing_page_url: config.landing_page_url,
+      thank_you_page_url: config.thank_you_page_url,
       page_url: window.location.href,
+      page: window.location.href,
+      submitted_at: hidden.timestamp,
       user_agent: navigator.userAgent
     });
 
@@ -268,10 +337,8 @@
     await fetch(config.webhook_url, {
       method: "POST",
       mode: "no-cors",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify(payload)
+      body: encodeWebhookPayload(payload),
+      keepalive: true
     });
   }
 
