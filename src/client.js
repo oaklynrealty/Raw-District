@@ -120,15 +120,67 @@
     return "Website";
   }
 
+  function getFirstTrackingValue(keys) {
+    for (const key of keys) {
+      const value = String(getTrackingParam(key) || "").trim();
+      if (value) return value;
+    }
+    return "";
+  }
+
+  function getPageLanguage() {
+    return (
+      getFirstTrackingValue(["language", "lang"]) ||
+      String(document.documentElement.lang || config.language || "en").trim() ||
+      "en"
+    );
+  }
+
+  function getCampaignSearchTerm() {
+    return getFirstTrackingValue(["campaign_search_term", "search_term", "utm_term", "keyword", "query", "q"]);
+  }
+
+  function getSelectedCountryLabel(form, countryCode) {
+    const picker = form.querySelector("[data-country-code-picker]");
+    if (!picker) return "";
+    const normalizedCode = normalizeDialCode(countryCode);
+    const options = Array.from(picker.querySelectorAll("[data-country-code-option]"));
+    const selected =
+      options.find(function (option) {
+        return option.classList.contains("is-selected");
+      }) ||
+      options.find(function (option) {
+        return normalizeDialCode(option.dataset.countryCode || "") === normalizedCode;
+      });
+    return selected ? selected.dataset.countryLabel || "" : "";
+  }
+
   function setHiddenFields(form, leadId) {
     const now = new Date().toISOString();
     const variant = form.dataset.formVariant || activeVariant;
+    const campaignSearchTerm = getCampaignSearchTerm();
+    const language = getPageLanguage();
+    const propertyLink = config.property_link || config.landing_page_url || window.location.href.split("?")[0];
+    const generalWhatsappLink = config.general_whatsapp_link || "";
     const values = {
       source_page: config.source_page,
       project_slug: config.project_slug,
       landing_page_variant: variant,
       timestamp: now,
       lead_id: leadId,
+      event_id: leadId,
+      events_id: leadId,
+      portal_lead_id: leadId,
+      property_link: propertyLink,
+      property_url: propertyLink,
+      listing_link: propertyLink,
+      general_whatsapp_link: generalWhatsappLink,
+      whatsapp_link: generalWhatsappLink,
+      language: language,
+      page_language: language,
+      browser_language: navigator.language || "",
+      campaign_search_term: campaignSearchTerm,
+      search_term: getFirstTrackingValue(["search_term", "query", "q"]) || campaignSearchTerm,
       url_query_string: window.location.search.replace(/^\?/, ""),
       all_url_params_json: getAllUrlParamsJson(),
       crm_lead_stage: "new_campaign_lead",
@@ -319,6 +371,7 @@
     const phoneNumber = getE164(countryCode, phone);
     const phoneLocal = normalizePhone(phone);
     const phoneCountryCode = normalizeDialCode(countryCode);
+    const phoneCountry = getSelectedCountryLabel(form, countryCode);
     const email = String(formValue(form, "email")).trim().toLowerCase();
     const propertyPreference = formValue(form, "property_preference");
     const purchaseTimeframe = formValue(form, "purchase_timeframe");
@@ -346,6 +399,9 @@
       lead_title: leadTitle,
       title: leadTitle,
       TITLE: leadTitle,
+      event_id: leadId,
+      events_id: leadId,
+      portal_lead_id: hidden.portal_lead_id || leadId,
       full_name: fullName,
       name: fullName,
       first_name: nameParts.firstName,
@@ -356,6 +412,9 @@
       whatsapp_number: phoneNumber,
       phone_country_code: phoneCountryCode,
       phone_local: phoneLocal,
+      country: phoneCountry || phoneCountryCode,
+      country_name: phoneCountry,
+      phone_country: phoneCountry,
       email: email,
       EMAIL: email,
       property_preference: propertyPreference,
@@ -374,9 +433,22 @@
       source: adPlatform,
       lead_source: adPlatform,
       marketing_source: hidden.utm_source || adPlatform,
+      campaign_search_term: hidden.campaign_search_term || "",
+      search_term: hidden.search_term || hidden.campaign_search_term || "",
+      language: hidden.language || "en",
+      page_language: hidden.page_language || hidden.language || "en",
+      browser_language: hidden.browser_language || "",
+      property_link: hidden.property_link || config.landing_page_url,
+      property_url: hidden.property_url || hidden.property_link || config.landing_page_url,
+      listing_link: hidden.listing_link || hidden.property_link || config.landing_page_url,
+      general_whatsapp_link: hidden.general_whatsapp_link || "",
+      whatsapp_link: hidden.whatsapp_link || hidden.general_whatsapp_link || "",
       message: message,
       inquiry_message: message,
       comments: message,
+      comment: message,
+      comment_text: message,
+      COMMENTS: message,
       consent: formValue(form, "consent") === "yes",
       gdpr_consent:
         "By submitting this form, you agree to be contacted by our property consultants regarding your inquiry.",
@@ -609,7 +681,9 @@
         pushDataLayerEvent({
           event: "lead_success",
           event_id: leadId,
+          events_id: leadId,
           lead_id: leadId,
+          portal_lead_id: payload.portal_lead_id,
           webhook_status: "success",
           form_submission_confirmed: "true",
           conversion_type: "form",
@@ -619,10 +693,20 @@
           lead_title: payload.lead_title,
           ad_platform: payload.ad_platform,
           source: payload.source,
+          campaign_search_term: payload.campaign_search_term,
+          language: payload.language,
+          property_link: payload.property_link,
+          general_whatsapp_link: payload.general_whatsapp_link,
           gclid: payload.gclid,
+          fbclid: payload.fbclid,
+          utm_source: payload.utm_source,
+          utm_medium: payload.utm_medium,
+          utm_campaign: payload.utm_campaign,
+          utm_content: payload.utm_content,
+          country: payload.country,
+          comment_text: payload.comment_text,
           gbraid: payload.gbraid,
           wbraid: payload.wbraid,
-          fbclid: payload.fbclid
         });
         showSuccess(form, payload);
       } catch (error) {
