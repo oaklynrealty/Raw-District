@@ -9,10 +9,32 @@
     "utm_campaign",
     "utm_content",
     "utm_term",
+    "utm_id",
     "gclid",
+    "gclsrc",
+    "gad_source",
+    "gad_campaignid",
+    "campaignid",
+    "adgroupid",
+    "creative",
+    "keyword",
+    "matchtype",
+    "device",
+    "network",
     "gbraid",
     "wbraid",
-    "fbclid"
+    "fbclid",
+    "fbp",
+    "fbc",
+    "campaign_id",
+    "adset_id",
+    "ad_id",
+    "placement",
+    "site_source_name",
+    "meta_campaign_id",
+    "meta_adset_id",
+    "meta_ad_id",
+    "meta_placement"
   ];
 
   function getActiveVariant() {
@@ -67,6 +89,37 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
+  function getCookieValue(name) {
+    const pattern = new RegExp("(?:^|; )" + name.replace(/[.$?*|{}()[\]\\/+^]/g, "\\$&") + "=([^;]*)");
+    const match = document.cookie.match(pattern);
+    return match ? decodeURIComponent(match[1]) : "";
+  }
+
+  function getTrackingParam(key) {
+    if (key === "fbp") return params.get("fbp") || getCookieValue("_fbp");
+    if (key === "fbc") return params.get("fbc") || getCookieValue("_fbc");
+    return params.get(key) || "";
+  }
+
+  function getAllUrlParamsJson() {
+    const allParams = {};
+    params.forEach(function (value, key) {
+      if (Object.prototype.hasOwnProperty.call(allParams, key)) {
+        allParams[key] = Array.isArray(allParams[key]) ? allParams[key].concat(value) : [allParams[key], value];
+      } else {
+        allParams[key] = value;
+      }
+    });
+    return JSON.stringify(allParams);
+  }
+
+  function deriveAdPlatform(values) {
+    const source = String(values.utm_source || "").toLowerCase();
+    if (values.gclid || values.gbraid || values.wbraid || values.gad_source || source.includes("google")) return "Google Ads";
+    if (values.fbclid || values.fbp || values.fbc || source.includes("facebook") || source.includes("instagram") || source.includes("meta")) return "Meta Ads";
+    return "Website";
+  }
+
   function setHiddenFields(form, leadId) {
     const now = new Date().toISOString();
     const variant = form.dataset.formVariant || activeVariant;
@@ -76,13 +129,15 @@
       landing_page_variant: variant,
       timestamp: now,
       lead_id: leadId,
+      url_query_string: window.location.search.replace(/^\?/, ""),
+      all_url_params_json: getAllUrlParamsJson(),
       crm_lead_stage: "new_campaign_lead",
       qualified_lead_status: "pending_crm_update",
       converted_lead_status: "pending_crm_update"
     };
 
     trackingKeys.forEach(function (key) {
-      values[key] = params.get(key) || "";
+      values[key] = getTrackingParam(key);
     });
 
     Object.keys(values).forEach(function (key) {
@@ -268,6 +323,7 @@
     const propertyPreference = formValue(form, "property_preference");
     const purchaseTimeframe = formValue(form, "purchase_timeframe");
     const contactMethod = formValue(form, "contact_method") || "Advisor follow-up";
+    const adPlatform = deriveAdPlatform(hidden);
     const leadTitle = fullName
       ? fullName + " - Raw District prices and availability"
       : "Raw District prices and availability request";
@@ -284,6 +340,8 @@
       project_name: config.project_name,
       project: config.project_name,
       brokerage: "Oaklyn Realty",
+      ad_platform: adPlatform,
+      traffic_source: adPlatform,
       form_type: form.dataset.formType || "",
       lead_title: leadTitle,
       title: leadTitle,
@@ -313,8 +371,9 @@
       inquiry_type: purchaseTimeframe || "Prices and availability request",
       unit_type: propertyPreference,
       lead_type: "Offplan Buyer",
-      source: "Website",
-      lead_source: "Website",
+      source: adPlatform,
+      lead_source: adPlatform,
+      marketing_source: hidden.utm_source || adPlatform,
       message: message,
       inquiry_message: message,
       comments: message,

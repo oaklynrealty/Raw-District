@@ -86,6 +86,28 @@ const requiredTerms = [
   "gbraid",
   "wbraid",
   "fbclid",
+  "utm_id",
+  "gclsrc",
+  "gad_source",
+  "campaignid",
+  "adgroupid",
+  "creative",
+  "keyword",
+  "matchtype",
+  "device",
+  "network",
+  "fbp",
+  "fbc",
+  "campaign_id",
+  "adset_id",
+  "ad_id",
+  "placement",
+  "site_source_name",
+  "ad_platform",
+  "Google Ads",
+  "Meta Ads",
+  "url_query_string",
+  "all_url_params_json",
   "landing_page_variant",
   "timestamp",
   "crm_lead_stage",
@@ -126,6 +148,7 @@ assert(variantHtml.includes("variant-b"), "Variant B page should render variant 
 assert(!landingHtml.includes('class="permit-qr-link" href='), "Permit QR badge should not be clickable.");
 assert(!landingHtml.includes("Email address <span>Optional</span>"), "Email field should be required, not optional.");
 assert(!variantHtml.includes("Email address <span>Optional</span>"), "Variant email field should be required, not optional.");
+assert(!landingHtml.includes("https://hooks.zapier.com/hooks/catch/27424919/uvzwm7a/"), "Raw District English should use its dedicated webhook.");
 
 const jsonLdBlocks = [...landingHtml.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/g)];
 assert(jsonLdBlocks.length >= 3, "Expected Organization, WebPage and RealEstateListing JSON-LD.");

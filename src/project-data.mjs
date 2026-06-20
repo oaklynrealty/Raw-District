@@ -12,7 +12,7 @@ export const project = {
   routePath: "/raw-district",
   variantBPath: "/variant-b",
   assetVersion: "20260619-ads-campaign-1",
-  webhookUrl: "https://hooks.zapier.com/hooks/catch/27424919/uvzwm7a/",
+  webhookUrl: "https://hooks.zapier.com/hooks/catch/27424919/42y0f2c/",
   tracking: getTrackingConfig(),
   cta: "Show Me Prices & Availability",
   microcopy: "Free information • No obligation • Your details remain private",
