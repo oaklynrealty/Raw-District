@@ -263,6 +263,31 @@
     return requestBody;
   }
 
+  function getPayloadValue(payload, keys) {
+    for (const key of keys) {
+      const value = payload && payload[key];
+      if (String(value == null ? "" : value).trim()) {
+        return String(value).trim();
+      }
+    }
+    return "";
+  }
+
+  function validateWebhookLeadPayload(payload) {
+    const fullName = getPayloadValue(payload, ["full_name", "name", "Lead Name", "Full Name", "FULL_NAME"]);
+    const phone = getPayloadValue(payload, ["phone", "phone_number", "Phone (mobile)", "PHONE_MOBILE", "PHONE_WORK"]);
+    const email = getPayloadValue(payload, ["email", "E-mail (mailing)", "EMAIL_WORK", "Email Address"]);
+    const comment = getPayloadValue(payload, ["comment_text", "Comment text", "comments", "Comments", "comment", "Comment"]);
+    const projectName = getPayloadValue(payload, ["project_name", "Project Name", "project", "Project"]);
+
+    if (fullName.length < 2) return "full name is missing";
+    if (!phone || phone.replace(/\D/g, "").length < 8) return "phone number is missing";
+    if (!email || !isValidEmail(email)) return "email is invalid";
+    if (comment.length < 2) return "comment is missing";
+    if (projectName.length < 2) return "project name is missing";
+    return "";
+  }
+
   function setupCountryCodePickers() {
     const pickers = Array.from(document.querySelectorAll("[data-country-code-picker]"));
 
@@ -613,6 +638,18 @@
 
   async function sendLead(payload) {
     if (!config.webhook_url) return;
+    const payloadError = validateWebhookLeadPayload(payload || {});
+    if (payloadError) {
+      pushDataLayerEvent({
+        event: "lead_webhook_blocked_empty_payload",
+        lead_id: payload && payload.lead_id ? payload.lead_id : "",
+        event_id: payload && payload.event_id ? payload.event_id : "",
+        project_name: config.project_name,
+        webhook_status: "blocked_empty_payload",
+        block_reason: payloadError
+      });
+      throw new Error("Blocked empty lead payload: " + payloadError);
+    }
     await fetch(config.webhook_url, {
       method: "POST",
       mode: "no-cors",
