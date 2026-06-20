@@ -532,8 +532,9 @@ h3 {
 
 .phone-row {
   display: grid;
-  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  column-gap: 18px;
+  row-gap: 14px;
   align-items: end;
 }
 
@@ -1396,6 +1397,11 @@ details p {
   .footer-grid,
   .gallery-modal-grid {
     grid-template-columns: 1fr;
+  }
+
+  .phone-row {
+    column-gap: 0;
+    row-gap: 14px;
   }
 
   .form-actions {

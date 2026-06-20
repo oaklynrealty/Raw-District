@@ -159,6 +159,7 @@ assert(!landingHtml.includes(">Learn More<"), "Visible Learn More CTA should not
 assert(css.includes("@media (max-width: 700px)"), "Missing mobile breakpoint.");
 assert(css.includes("prefers-reduced-motion"), "Missing reduced-motion support.");
 assert(css.includes("aspect-ratio"), "Images need reserved aspect ratios.");
+assert(css.includes("column-gap: 18px"), "Phone country selector needs clear separation from phone number.");
 assert(landingHtml.includes('type="image/webp"'), "Landing page should use WebP picture sources.");
 assert(variantHtml.includes("variant-b"), "Variant B page should render variant class.");
 assert(!landingHtml.includes('class="permit-qr-link" href='), "Permit QR badge should not be clickable.");
