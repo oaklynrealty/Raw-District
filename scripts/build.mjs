@@ -772,6 +772,7 @@ ${renderHead({ canonical })}
       project_name: project.name,
       project_slug: project.slug,
       source_page: project.sourcePage,
+      property_type: project.listing.propertyType,
       landing_page_url: project.landingPageUrl,
       thank_you_page_url: project.thankYouPageUrl,
       property_link: project.landingPageUrl,

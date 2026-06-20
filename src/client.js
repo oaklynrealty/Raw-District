@@ -377,6 +377,18 @@
     const purchaseTimeframe = formValue(form, "purchase_timeframe");
     const contactMethod = formValue(form, "contact_method") || "Advisor follow-up";
     const adPlatform = deriveAdPlatform(hidden);
+    const campaignName = hidden.utm_campaign || "Raw District English";
+    const sourceInformation = [
+      adPlatform,
+      hidden.utm_source ? "utm_source: " + hidden.utm_source : "",
+      hidden.utm_medium ? "utm_medium: " + hidden.utm_medium : "",
+      hidden.utm_campaign ? "utm_campaign: " + hidden.utm_campaign : "",
+      hidden.gclid ? "gclid: " + hidden.gclid : "",
+      hidden.fbclid ? "fbclid: " + hidden.fbclid : ""
+    ]
+      .filter(Boolean)
+      .join(" | ");
+    const propertyType = config.property_type || "Apartments";
     const leadTitle = fullName
       ? fullName + " - Raw District prices and availability"
       : "Raw District prices and availability request";
@@ -398,6 +410,8 @@
       "Purchase timeframe: " + (purchaseTimeframe || "Not specified"),
       "Preferred contact: " + contactMethod,
       "Source: " + adPlatform,
+      "Source information: " + sourceInformation,
+      "Campaign name: " + campaignName,
       "Campaign search term: " + (hidden.campaign_search_term || ""),
       "GCLID: " + (hidden.gclid || ""),
       "FBCLID: " + (hidden.fbclid || ""),
@@ -491,20 +505,33 @@
       OPPORTUNITY: "0",
       OPENED: "Y",
       "Full Name": fullName,
-      "Name": fullName,
+      "Campaign name": campaignName,
+      "Bedroom": propertyPreference,
+      "Lead Name": fullName,
+      "Name": nameParts.firstName || fullName,
+      "Last name": nameParts.lastName,
       "Contact Name": fullName,
+      "Source information": sourceInformation,
+      "Comment": crmComment,
+      "Ad system": adPlatform,
+      "Medium": hidden.utm_medium || adPlatform,
+      "Ad campaign UTM": hidden.utm_campaign || "",
+      "Campaign contents": hidden.utm_content || "",
       "Mobile or WhatsApp number": phoneNumber,
       "Phone Number": phoneNumber,
       "Phone": phoneNumber,
       "Mobile": phoneNumber,
       "Mobile Phone": phoneNumber,
+      "Phone (mobile)": phoneNumber,
       "WhatsApp Number": phoneNumber,
       "Email Address": email,
       "Email": email,
       "Email Work": email,
+      "E-mail (mailing)": email,
       "Project": config.project_name,
       "Project Name": config.project_name,
       "Property Preference": propertyPreference,
+      "Property Type": propertyType,
       "Purchase Timeframe": purchaseTimeframe,
       "Preferred Contact Method": contactMethod,
       "Lead Type": "Offplan Buyer",
@@ -517,8 +544,10 @@
       "Event ID": leadId,
       "Portal Lead ID": hidden.portal_lead_id || leadId,
       "Property Link": hidden.property_link || config.landing_page_url,
+      "Whatsapp Tracking Link": hidden.general_whatsapp_link || "",
       "General Whatsapp Link": hidden.general_whatsapp_link || "",
       "General WhatsApp Link": hidden.general_whatsapp_link || "",
+      "Interested IN": config.project_name,
       "GCLID": hidden.gclid || "",
       "FBCLID": hidden.fbclid || "",
       "UTM Source": hidden.utm_source || "",
