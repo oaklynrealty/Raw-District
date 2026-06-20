@@ -606,6 +606,24 @@
           property_preference: payload.property_preference,
           purchase_timeframe: payload.purchase_timeframe
         });
+        pushDataLayerEvent({
+          event: "lead_success",
+          event_id: leadId,
+          lead_id: leadId,
+          webhook_status: "success",
+          form_submission_confirmed: "true",
+          conversion_type: "form",
+          conversion_action: "form_submission",
+          form_type: payload.form_type,
+          landing_page_variant: payload.landing_page_variant,
+          lead_title: payload.lead_title,
+          ad_platform: payload.ad_platform,
+          source: payload.source,
+          gclid: payload.gclid,
+          gbraid: payload.gbraid,
+          wbraid: payload.wbraid,
+          fbclid: payload.fbclid
+        });
         showSuccess(form, payload);
       } catch (error) {
         if (status) {
