@@ -212,6 +212,11 @@ assert(client.includes('webhook_status: "success"'), "lead_success must include 
 assert(client.includes('form_submission_confirmed: "true"'), "lead_success must confirm form submission.");
 assert(client.includes('conversion_type: "form"'), "lead_success must include conversion_type form.");
 assert(client.includes('conversion_action: "form_submission"'), "lead_success must include conversion_action form_submission.");
+assert(client.includes("trackGoogleAdsLeadConversion"), "Raw District English must directly dispatch Google Ads conversion after lead_success.");
+assert(client.includes("google_ads_conversion_dispatched"), "Missing Google Ads conversion dispatch diagnostic event.");
+assert(client.includes("transaction_id"), "Google Ads conversion must include transaction_id for deduplication.");
+assert(client.includes("AW-18209773990") || landingHtml.includes("AW-18209773990"), "Missing Google Ads conversion ID.");
+assert(client.includes("oCD6CPHVq7gcEKazjOtD") || landingHtml.includes("oCD6CPHVq7gcEKazjOtD"), "Missing Google Ads conversion label.");
 
 const jsonLdBlocks = [...landingHtml.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/g)];
 assert(jsonLdBlocks.length >= 3, "Expected Organization, WebPage and RealEstateListing JSON-LD.");

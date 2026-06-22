@@ -779,6 +779,7 @@ ${renderHead({ canonical })}
       general_whatsapp_link: getWhatsAppHref(),
       language: "en",
       webhook_url: project.webhookUrl,
+      google_ads_conversion: project.googleAdsConversion,
       cta: project.cta,
       default_variant: variant
     })};

@@ -14,6 +14,12 @@ export const project = {
   assetVersion: "20260620-single-conversion-1",
   webhookUrl: "https://hooks.zapier.com/hooks/catch/27424919/42y0f2c/",
   tracking: getTrackingConfig(),
+  googleAdsConversion: {
+    conversionId: "AW-18209773990",
+    conversionLabel: "oCD6CPHVq7gcEKazjOtD",
+    value: 1,
+    currency: "AED"
+  },
   cta: "Show Me Prices & Availability",
   microcopy: "Free information • No obligation • Your details remain private",
   whatsappPrefill:
